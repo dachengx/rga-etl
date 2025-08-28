@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: rga-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rga_user
+      MYSQL_DATABASE: rga
+      MYSQL_USER: rga_user
+      MYSQL_PASSWORD: rgapw
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./rga-mysql:/var/lib/mysql
+  adminer:
+    image: adminer
+    container_name: rga-adminer
+    ports:
+      - "8080:8080"
