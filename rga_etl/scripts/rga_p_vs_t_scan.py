@@ -7,12 +7,19 @@ import numpy as np
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga, set_rga
+from rga_etl.rga import init_rga
 from rga_etl.mysql import Execution, PvsTScan, PvsTScanPoint
 from rga_etl.fake import fake_p_vs_t_scan
 
 
 def p_vs_t_scan(session, execution: Execution, masses):
+    """Performs a pressure vs time scan for the specified masses
+    and records the data in the database.
+    Args:
+        session: SQLAlchemy session object.
+        execution (Execution): The execution record to associate with the scan.
+        masses (list): List of masses to scan.
+    """
     load_dotenv()
     total_time = float(os.getenv("RGA_SCAN_TOTAL_TIME", "60"))
     time_interval = float(os.getenv("RGA_SCAN_TIME_INTERVAL", "5"))
@@ -25,7 +32,6 @@ def p_vs_t_scan(session, execution: Execution, masses):
     else:
         rga = init_rga()
         rga.filament.turn_on()
-        set_rga(rga)
         started_at = dt.datetime.utcnow()
         times = []
         intensities = []

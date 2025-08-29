@@ -3,12 +3,17 @@ import datetime as dt
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga, set_rga
+from rga_etl.rga import init_rga, set_rga_analog_scan_parameters
 from rga_etl.mysql import Execution, AnalogScan, AnalogScanPoint
 from rga_etl.fake import fake_analog_scan
 
 
 def analog_scan(session, execution: Execution):
+    """Performs an analog scan and records the data in the database.
+    Args:
+        session: SQLAlchemy session object.
+        execution (Execution): The execution record to associate with the scan.
+    """
     load_dotenv()
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
     if fake:
@@ -18,7 +23,7 @@ def analog_scan(session, execution: Execution):
     else:
         rga = init_rga()
         rga.filament.turn_on()
-        set_rga(rga)
+        set_rga_analog_scan_parameters(rga)
         started_at = dt.datetime.utcnow()
         analog_spectrum = rga.scan.get_analog_scan()
         ended_at = dt.datetime.utcnow()

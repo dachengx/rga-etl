@@ -15,6 +15,8 @@ Base = declarative_base()
 
 
 class Instrument(Base):
+    """SQLAlchemy model for an RGA instrument."""
+
     __tablename__ = "instruments"
     id = Column(Integer, primary_key=True)
     name = Column(String(64), unique=True, nullable=False)
@@ -25,6 +27,8 @@ class Instrument(Base):
 
 
 class Execution(Base):
+    """SQLAlchemy model for an execution of scans on an RGA instrument."""
+
     __tablename__ = "executions"
     id = Column(Integer, primary_key=True)
     instrument_id = Column(Integer, ForeignKey("instruments.id"), nullable=False)
@@ -43,6 +47,8 @@ class Execution(Base):
 
 
 class AnalogScan(Base):
+    """SQLAlchemy model for an analog scan performed during an execution."""
+
     __tablename__ = "analog_scans"
     id = Column(Integer, primary_key=True)
     execution_id = Column(Integer, ForeignKey("executions.id"), nullable=False)
@@ -58,6 +64,8 @@ class AnalogScan(Base):
 
 
 class AnalogScanPoint(Base):
+    """SQLAlchemy model for a data point in an analog scan."""
+
     __tablename__ = "analog_scan_points"
     id = Column(Integer, primary_key=True)
     scan_id = Column(Integer, ForeignKey("analog_scans.id", ondelete="CASCADE"), nullable=False)
@@ -67,6 +75,8 @@ class AnalogScanPoint(Base):
 
 
 class PvsTScan(Base):
+    """SQLAlchemy model for a pressure vs time scan performed during an execution."""
+
     __tablename__ = "p_vs_t_scans"
     id = Column(Integer, primary_key=True)
     execution_id = Column(Integer, ForeignKey("executions.id"), nullable=False)
@@ -78,6 +88,8 @@ class PvsTScan(Base):
 
 
 class PvsTScanPoint(Base):
+    """SQLAlchemy model for a data point in a pressure vs time scan."""
+
     __tablename__ = "p_vs_t_scan_points"
     id = Column(Integer, primary_key=True)
     scan_id = Column(Integer, ForeignKey("p_vs_t_scans.id", ondelete="CASCADE"), nullable=False)
@@ -88,4 +100,5 @@ class PvsTScanPoint(Base):
 
 
 def ensure_schema(engine):
+    """Ensure that the database schema is created."""
     Base.metadata.create_all(engine)

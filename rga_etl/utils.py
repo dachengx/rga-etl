@@ -6,6 +6,7 @@ from rga_etl.mysql import Instrument, ensure_schema
 
 
 def mysql_url():
+    """Build the MySQL connection URL from environment variables."""
     load_dotenv()
     host = os.getenv("MYSQL_HOST", "127.0.0.1")
     port = os.getenv("MYSQL_PORT", "3306")
@@ -16,6 +17,7 @@ def mysql_url():
 
 
 def init_session():
+    """Initialize the SQLAlchemy session."""
     engine = create_engine(mysql_url(), pool_pre_ping=True, pool_recycle=3600)
     ensure_schema(engine)
     Session = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
@@ -23,6 +25,7 @@ def init_session():
 
 
 def init_instrument(session):
+    """Initialize the Instrument in the database if it doesn't exist."""
     load_dotenv()
     name = os.getenv("RGA_MODEL", "RGA200")
     instrument = session.query(Instrument).filter_by(name=name).one_or_none()
