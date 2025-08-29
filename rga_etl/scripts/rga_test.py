@@ -1,11 +1,11 @@
-from rga_etl.utils import init_session
+from rga_etl.utils import init_session, init_instrument
 from rga_etl.rga import init_rga
 
 
 def main():
     Session = init_session()
     with Session() as session:
-        instrument = init_instrument(session)
+        init_instrument(session)
 
     rga = init_rga()
     if not rga.check_head_online():
