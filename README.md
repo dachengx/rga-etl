@@ -42,3 +42,9 @@ Install MySQL related python packages:
 ```
 pip install sqlalchemy dotenv
 ```
+
+## TODOs
+
+1. Add CDEM settings
+2. Test PvsT
+3. Decide whether add histogram mode

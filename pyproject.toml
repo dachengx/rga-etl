@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "rga_etl"
+version = "0.0.0"
+description = "Extract, transform, and load the data from an SRS RGA200"
+readme = "README.md"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+repository = "https://github.com/dachengx/rga-etl"
+
+[tool.poetry.scripts]
+rga_test = "rga_etl.scripts.rga_test:main"
+rga_analog_scan = "rga_etl.scripts.rga_analog_scan:main"
+rga_single_mass_scan = "rga_etl.scripts.rga_single_mass_scan:main"
+rga_p_vs_t = "rga_etl.scripts.rga_p_vs_t:main"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+"srsinst.rga" = "*"
+sqlalchemy = "*"
+python-dotenv = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.8"]
+build-backend = "poetry.core.masonry.api"
