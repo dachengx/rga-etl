@@ -12,21 +12,24 @@ def analog_scan(session, execution: Execution):
     load_dotenv()
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
     if fake:
-        rga, analog_mass_axis, spectrum_in_torr = fake_analog_scan()
         started_at = dt.datetime.utcnow()
+        rga, analog_mass_axis, spectrum_in_torr = fake_analog_scan()
+        ended_at = dt.datetime.utcnow()
     else:
         rga = init_rga()
         rga.filament.turn_on()
         set_rga(rga)
         started_at = dt.datetime.utcnow()
         analog_spectrum = rga.scan.get_analog_scan()
+        ended_at = dt.datetime.utcnow()
+        rga.filament.turn_off()
         analog_mass_axis = rga.scan.get_mass_axis(True)
         spectrum_in_torr = rga.scan.get_partial_pressure_corrected_spectrum(analog_spectrum)
-        rga.filament.turn_off()
 
     scan = AnalogScan(
         execution_id=execution.id,
         started_at=started_at,
+        ended_at=ended_at,
         initial_mass=rga.scan.initial_mass,
         final_mass=rga.scan.final_mass,
         resolution=rga.scan.resolution,

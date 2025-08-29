@@ -1,5 +1,8 @@
-import numpy as np
+import time
+import math
 from types import SimpleNamespace
+import datetime as dt
+import numpy as np
 from rga_etl.rga import set_rga
 
 
@@ -11,15 +14,21 @@ def fake_analog_scan():
     return rga, mass_axis, spectrum
 
 
-def fake_single_mass_scan(mass):
+def fake_p_vs_t_scan(started_at, masses, total_time, time_interval):
     rga = SimpleNamespace(scan=SimpleNamespace())
     set_rga(rga)
-    raise NotImplementedError
-    # return rga, intensity
+    times = []
+    intensities = []
+    for i in range(math.ceil(total_time / time_interval)):
+        _times = []
+        _intensities = []
+        for mass in masses:
+            _times.append((dt.datetime.utcnow() - started_at).total_seconds())
+            _intensities.append(np.random.rand() * 1e-9)
+        times.append(_times)
+        intensities.append(_intensities)
+        time.sleep(time_interval)
 
-
-def fake_p_vs_t(masses):
-    rga = SimpleNamespace(scan=SimpleNamespace())
-    set_rga(rga)
-    raise NotImplementedError
-    # return rga, intensities
+    times = np.array(times)
+    intensities = np.array(intensities)
+    return rga, times, intensities

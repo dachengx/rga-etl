@@ -1,11 +1,8 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from rga_etl.mysql import Instrument
-
-
-Base = declarative_base()
+from sqlalchemy.orm import sessionmaker
+from rga_etl.mysql import Instrument, ensure_schema
 
 
 def mysql_url():
@@ -18,10 +15,6 @@ def mysql_url():
     return f"mysql+mysqlconnector://{user}:{pw}@{host}:{port}/{db}"
 
 
-def ensure_schema(engine):
-    Base.metadata.create_all(engine)
-
-
 def init_session():
     engine = create_engine(mysql_url(), pool_pre_ping=True, pool_recycle=3600)
     ensure_schema(engine)
@@ -30,9 +23,12 @@ def init_session():
 
 
 def init_instrument(session):
-    instrument = session.query(Instrument).filter_by(name="RGA200").one_or_none()
+    load_dotenv()
+    name = os.getenv("RGA_MODEL", "RGA200")
+    instrument = session.query(Instrument).filter_by(name=name).one_or_none()
     if not instrument:
-        instrument = Instrument(name="RGA200", serial="17405")
+        serial = os.getenv("RGA_SERIAL_NUMBER", "17405")
+        instrument = Instrument(name=name, serial=serial)
         session.add(instrument)
         session.commit()
     return instrument

@@ -19,8 +19,7 @@ repository = "https://github.com/dachengx/rga-etl"
 [tool.poetry.scripts]
 rga_test = "rga_etl.scripts.rga_test:main"
 rga_analog_scan = "rga_etl.scripts.rga_analog_scan:main"
-rga_single_mass_scan = "rga_etl.scripts.rga_single_mass_scan:main"
-rga_p_vs_t = "rga_etl.scripts.rga_p_vs_t:main"
+rga_p_vs_t_scan = "rga_etl.scripts.rga_p_vs_t_scan:main"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
