@@ -84,9 +84,11 @@ def main():
         execution = Execution(instrument_id=instrument.id)
         session.add(execution)
         session.flush()
-        masses = args.masses or os.getenv("RGA_MASSES")
-        masses = [float(f) for f in masses.replace(" ", "").split(",")]
-        if masses is None:
+        if args.masses is not None:
+            masses = args.masses
+        elif os.getenv("RGA_MASSES") is not None:
+            masses = [float(f) for f in os.getenv("RGA_MASSES").replace(" ", "").split(",")]
+        else:
             raise ValueError("No masses provided for pressure vs time scan")
         p_vs_t_scan(session, execution, masses)
         execution.end()

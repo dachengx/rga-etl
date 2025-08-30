@@ -11,7 +11,8 @@ def main():
     if not rga.check_head_online():
         raise RuntimeError("RGA head is not online.")
     print(f"The ID of the RGA is {rga.check_id()}.\n")
-    print(f"The status of the RGA is {rga.get_status()}.")
+    print("The status of the RGA is:")
+    print(f"{rga.get_status()}.")
     rga.filament.turn_off()
     rga.disconnect()
 
