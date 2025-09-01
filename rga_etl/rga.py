@@ -27,3 +27,21 @@ def set_rga_analog_scan_parameters(rga):
     rga.scan.final_mass = int(os.getenv("RGA_FINAL_MASS", "200"))
     rga.scan.resolution = int(os.getenv("RGA_RESOLUTION", "10"))
     rga.scan.scan_speed = int(os.getenv("RGA_SCAN_SPEED", "3"))
+
+
+def set_rga_parameters_to_execution(rga, execution):
+    """Set RGA parameters to the execution object.
+    Make sure this is called after initializing the filament.
+    Args:
+        rga (RGA100): An instance of the RGA100 class.
+        execution (Execution): An instance of the Execution class.
+    """
+    execution.detector = "FC"
+    execution.electron_energy = rga.ionizer.electron_energy
+    execution.ion_energy = rga.ionizer.ion_energy
+    execution.focus_voltage = rga.ionizer.focus_voltage
+    execution.emission_current = rga.ionizer.emission_current
+    execution.total_pressure = rga.pressure.get_total_pressure_in_torr()
+    execution.partial_pressure_sensitivity_factor = (
+        rga.pressure.get_partial_pressure_sensitivity_in_torr()
+    )

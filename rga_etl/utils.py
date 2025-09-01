@@ -20,6 +20,7 @@ def init_session():
     """Initialize the SQLAlchemy session."""
     engine = create_engine(mysql_url(), pool_pre_ping=True, pool_recycle=3600)
     ensure_schema(engine)
+    # set expire_on_commit to False to prevent attributes from being expired
     Session = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     return Session
 

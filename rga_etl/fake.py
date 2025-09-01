@@ -13,14 +13,14 @@ def fake_analog_scan():
             A fake RGA object with scan parameters set.
         mass_axis: np.ndarray
             An array of mass/charge values.
-        spectrum: np.ndarray
+        intensities: np.ndarray
             An array of random intensities corresponding to the mass axis.
     """
     rga = SimpleNamespace(scan=SimpleNamespace())
     set_rga_analog_scan_parameters(rga)
     mass_axis = np.linspace(1, 200, 1991)
-    spectrum = np.random.rand(len(mass_axis)) * 1e-9
-    return rga, mass_axis, spectrum
+    intensities = np.random.rand(len(mass_axis)) * 1e-9
+    return rga, mass_axis, intensities
 
 
 def fake_p_vs_t_scan(started_at, masses, total_time, time_interval):
