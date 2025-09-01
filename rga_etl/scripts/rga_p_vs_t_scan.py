@@ -7,23 +7,32 @@ import numpy as np
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga
+from rga_etl.rga import init_rga, set_rga_parameters_to_execution
 from rga_etl.mysql import Execution, PvsTScan, PvsTScanPoint
 from rga_etl.fake import fake_p_vs_t_scan
 
 
-def p_vs_t_scan(session, execution: Execution, masses):
+def p_vs_t_scan(session, masses):
     """Performs a pressure vs time scan for the specified masses
     and records the data in the database.
     Args:
         session: SQLAlchemy session object.
-        execution (Execution): The execution record to associate with the scan.
         masses (list): List of masses to scan.
     """
     load_dotenv()
     total_time = float(os.getenv("RGA_SCAN_TOTAL_TIME", "60"))
     time_interval = float(os.getenv("RGA_SCAN_TIME_INTERVAL", "5"))
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
+
+    instrument = init_instrument(session)
+
+    execution = Execution(
+        instrument_id=instrument.id,
+        _fake_execution=fake,
+    )
+    session.add(execution)
+    session.flush()
+
     if fake:
         started_at = dt.datetime.utcnow()
         rga, times, intensities = fake_p_vs_t_scan(started_at, masses, total_time, time_interval)
@@ -32,6 +41,9 @@ def p_vs_t_scan(session, execution: Execution, masses):
     else:
         rga = init_rga()
         rga.filament.turn_on()
+
+        set_rga_parameters_to_execution(rga, execution)
+
         started_at = dt.datetime.utcnow()
         times = []
         intensities = []
@@ -51,7 +63,8 @@ def p_vs_t_scan(session, execution: Execution, masses):
         execution_id=execution.id,
         started_at=started_at,
         ended_at=ended_at,
-        detector="FC",
+        total_time=total_time,
+        time_interval=time_interval,
     )
     session.add(scan)
     session.flush()  # get scan.id
@@ -67,6 +80,9 @@ def p_vs_t_scan(session, execution: Execution, masses):
     except IntegrityError:
         session.rollback()
 
+    execution.end()
+    session.commit()
+
 
 def main():
     parser = argparse.ArgumentParser(description="Pressure vs time scan of one or multiple masses")
@@ -80,19 +96,13 @@ def main():
     args = parser.parse_args()
     Session = init_session()
     with Session() as session:
-        instrument = init_instrument(session)
-        execution = Execution(instrument_id=instrument.id)
-        session.add(execution)
-        session.flush()
         if args.masses is not None:
             masses = args.masses
         elif os.getenv("RGA_MASSES") is not None:
             masses = [float(f) for f in os.getenv("RGA_MASSES").replace(" ", "").split(",")]
         else:
             raise ValueError("No masses provided for pressure vs time scan")
-        p_vs_t_scan(session, execution, masses)
-        execution.end()
-        session.commit()
+        p_vs_t_scan(session, masses)
 
 
 if __name__ == "__main__":
