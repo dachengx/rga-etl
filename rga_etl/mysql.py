@@ -1,6 +1,7 @@
 import datetime as dt
 from sqlalchemy import (
     Column,
+    Boolean,
     Integer,
     String,
     Float,
@@ -41,14 +42,14 @@ class Execution(Base):
     ion_energy = Column(Float, nullable=True)
     focus_voltage = Column(Float, nullable=True)
     emission_current = Column(Float, nullable=True)
+    total_pressure = Column(Float, nullable=True)  # in Torr
+    partial_pressure_sensitivity_factor = Column(Float, nullable=True)  # in 0.1 fA / Torr
     # CDEM related fields are not detailed yet
     cdem_stored_voltage = Column(Float, nullable=True)
     cdem_stored_gain = Column(Float, nullable=True)
     cdem_voltage = Column(Float, nullable=True)
-    total_pressure = Column(Float, nullable=False)  # in Torr
-    partial_pressure_sensitivity_factor = Column(Float, nullable=False)  # in 0.1 fA / Torr
     # indicates if the execution was performed in fake mode for testing
-    _fake_execution = Column("fake_execution", Integer, nullable=False, default=0)
+    _fake_execution = Column("fake_execution", Boolean, nullable=False, default=False)
 
     instrument = relationship("Instrument", back_populates="executions")
     analog_scans = relationship(

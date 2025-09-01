@@ -20,7 +20,7 @@ def analog_scan(session):
 
     execution = Execution(
         instrument_id=instrument.id,
-        _fake_execution=1 if fake else 0,
+        _fake_execution=fake,
     )
     session.add(execution)
     session.flush()
