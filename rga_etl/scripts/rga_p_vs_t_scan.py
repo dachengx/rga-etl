@@ -7,7 +7,7 @@ import numpy as np
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga, set_rga_parameters_to_execution
+from rga_etl.rga import init_rga, set_rga_parameters_to_execution, rga_turn_off_filament
 from rga_etl.mysql import Execution, PvsTScan, PvsTScanPoint
 from rga_etl.fake import fake_p_vs_t_scan
 
@@ -102,7 +102,11 @@ def main():
             masses = [float(f) for f in os.getenv("RGA_MASSES").replace(" ", "").split(",")]
         else:
             raise ValueError("No masses provided for pressure vs time scan")
-        p_vs_t_scan(session, masses)
+        try:
+            p_vs_t_scan(session, masses)
+        except Exception as e:
+            rga_turn_off_filament()
+            raise e
 
 
 if __name__ == "__main__":
