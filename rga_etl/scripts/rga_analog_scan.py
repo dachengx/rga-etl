@@ -3,7 +3,12 @@ import datetime as dt
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
 from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga, set_rga_analog_scan_parameters, set_rga_parameters_to_execution
+from rga_etl.rga import (
+    init_rga,
+    set_rga_analog_scan_parameters,
+    set_rga_parameters_to_execution,
+    rga_turn_off_filament,
+)
 from rga_etl.mysql import Execution, AnalogScan, AnalogScanPoint
 from rga_etl.fake import fake_analog_scan
 
@@ -73,7 +78,11 @@ def analog_scan(session):
 def main():
     Session = init_session()
     with Session() as session:
-        analog_scan(session)
+        try:
+            analog_scan(session)
+        except Exception as e:
+            rga_turn_off_filament()
+            raise e
 
 
 if __name__ == "__main__":

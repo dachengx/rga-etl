@@ -45,3 +45,16 @@ def set_rga_parameters_to_execution(rga, execution):
     execution.partial_pressure_sensitivity_factor = (
         rga.pressure.get_partial_pressure_sensitivity_in_torr()
     )
+
+
+def rga_turn_off_filament():
+    """Turn off the RGA filament if it is on.
+    This function is useful to ensure the filament is turned off
+    in case of an unexpected error during execution.
+    """
+    load_dotenv()
+    fake = os.getenv("FAKE_EXECUTION", "0") == "1"
+    if fake:
+        return
+    rga = init_rga()
+    rga.filament.turn_off()
