@@ -1,0 +1,37 @@
+[VERSION]
+APIVERSION=(100)
+VERSION=(2,11,1,21)
+[FRAME]
+PLACEMENT=(44,2,3,-1,-1,-1,-1,234,234,1674,987)
+FRAME DATA=(1,1,0,0)
+[FRAME DATA]
+1=(44,0,1,-1,-1,-8,-31,26,26,1427,616)
+2=(44,0,1,-1,-1,-8,-31,52,52,1453,642)
+3=(44,2,3,-1,-1,-8,-31,78,78,1475,642)
+4=(44,0,1,-1,-1,-1,-1,0,23,255,826)
+5=(44,0,1,-1,-1,-1,-1,0,23,255,498)
+6=(44,0,1,-1,-1,-1,-1,0,23,240,850)
+[FRAME TYPES]
+1=20
+2=24
+3=3
+4=14
+5=21
+6=25
+[Ladder Views]
+F3V1=(95,1,0,7,16,5,2,1,30000,0,1)
+[Ladder Frame 3]
+Ladder View 1z=(0,0,1392,820)
+ModuleSegment=6
+[TAB INFO]
+Tab0=20,Start Page
+Tab1=24,Dashboard
+Tab2=3,$Main
+[DOCKPANE TO FRAME XREF]
+Project Browser`6852=4
+Launchpad`6855=5
+Instruction Toolbox`4381=6
+[DISPLAY MODE]
+DoMDIRestore=0
+[SYSTEM NAME]
+System Name=QUANTUMC
