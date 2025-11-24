@@ -10,9 +10,29 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./rga-mysql:/var/lib/mysql
+      - "C:/mysql-data:/var/lib/mysql"
+
   adminer:
     image: adminer
     container_name: rga-adminer
     ports:
       - "8080:8080"
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - "C:/grafana-data:/var/lib/grafana"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - "${USERPROFILE}/mosquitto.conf:/mosquitto/config/mosquitto.conf"

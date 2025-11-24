@@ -2,6 +2,29 @@
 
 Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
 
+## Docker services
+
+All commands, unless emphasized, are running in Command Prompt (`cmd`).
+After installation of docker from [https://www.docker.com/](Docker Website), run
+
+```
+mkdir C:\mysql-data
+mkdir C:\grafana-data
+```
+
+```
+docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
+```
+
+Test mosquito sub/pub model
+
+```
+docker run -it --rm eclipse-mosquitto mosquitto_sub -h xxx.xxx.xxx.xxx -t brx/control/do -v
+docker run -it --rm eclipse-mosquitto mosquitto_pub -h xxx.xxx.xxx.xxx -t brx/control/do -m 1
+```
+
+Replace the ip `xxx.xxx.xxx.xxx` to an available one.
+
 ## srsinst.rga
 
 The repo is based on the python wrapped interface for RGA communication. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
@@ -27,40 +50,3 @@ The settings of RGA can be defined in `.env`:
 5. `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, and `MYSQL_DB` are the environmental variable needed by the MySQL database connection.
 6. `RGA_INITIAL_MASS`, `RGA_FINAL_MASS`, `RGA_RESOLUTION`, and `RGA_SCAN_SPEED` are the environmental variable needed by the analog scan.
 7. `RGA_MASSES`, `RGA_SCAN_TOTAL_TIME` and `RGA_SCAN_TIME_INTERVAL` are the environmental variable needed by the pressure vs time scan.
-
-## MySQL Database Setup
-
-On macOS, install docker-desktop by
-
-```
-brew install --cask docker
-```
-
------
-
-Initialize a MySQL server inside a container and put it in the background:
-
-```
-open -a Docker
-docker compose up -d
-```
-
-The configuration is at `docker-compose.yml`.
-
-Use `docker stats` to check the status of the container. Use `docker ps --all` to check all containers including those closed. 
-
------
-
-Connect to the MySQL container with username `root`:
-
-```
-docker exec -it rga-mysql mysql -uroot -p
-```
-
------
-
-Install MySQL related python packages:
-
-```
-pip install sqlalchemy dotenv
-```
