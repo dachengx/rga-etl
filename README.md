@@ -25,6 +25,8 @@ docker run -it --rm eclipse-mosquitto mosquitto_pub -h xxx.xxx.xxx.xxx -t brx/co
 
 Replace the ip `xxx.xxx.xxx.xxx` to an available one.
 
+To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, visit `http://localhost:8080/` with `"server"` set to `mysql`.
+
 ## srsinst.rga
 
 The repo is based on the python wrapped interface for RGA communication. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
