@@ -15,6 +15,11 @@ mkdir C:\grafana-data
 ```
 docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
 ```
+or
+```
+docker compose -f "$HOME\rga-etl\docker-compose.yml" up -d
+```
+in PowerShell.
 
 Test mosquito sub/pub model
 
