@@ -25,7 +25,9 @@ rga_p_vs_t_scan = "rga_etl.scripts.rga_p_vs_t_scan:main"
 python = ">=3.9,<3.12"
 "srsinst.rga" = "*"
 sqlalchemy = "*"
+mysql-connector-python = "*"
 python-dotenv = "*"
+matplotlib = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
