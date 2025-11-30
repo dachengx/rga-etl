@@ -1,3 +1,7 @@
 *.dat
 rga-mysql
 __pycache__
+*.csv
+*.txt
+*.dlo
+*.wsp
