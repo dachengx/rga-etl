@@ -10,3 +10,6 @@ providers:
       path: '/etc/grafana/provisioning/dashboards'
     updateIntervalSeconds: 10
     allowUiUpdates: true
+    disableDeletion: false
+    immutable: false
+    recursive: false
