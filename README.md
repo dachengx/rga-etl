@@ -12,6 +12,8 @@ mkdir C:\mysql-data
 mkdir C:\grafana-data
 ```
 
+Check the usable address by `ipconfig` or (`Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` in PowerShell), and set `MQTT_BROKER` in `docker-compose.tml` as the "Ethernet"'s ip address.
+
 ```
 docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
 ```
@@ -24,13 +26,13 @@ in PowerShell.
 Test mosquito sub/pub model
 
 ```
-docker run -it --rm eclipse-mosquitto mosquitto_sub -h xxx.xxx.xxx.xxx -t brx/control/do -v
-docker run -it --rm eclipse-mosquitto mosquitto_pub -h xxx.xxx.xxx.xxx -t brx/control/do -m 1
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_sub -h mosquitto -p 1883 -t brx/control/do -v
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_pub -h mosquitto -p 1883 -t brx/control/do -m 1
 ```
 
-Replace the ip `xxx.xxx.xxx.xxx` to an available one.
+To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, visit `http://localhost:8090/` with `"server"` set to `mysql`.
 
-To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, visit `http://localhost:8080/` with `"server"` set to `mysql`.
+To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`.
 
 ## srsinst.rga
 
