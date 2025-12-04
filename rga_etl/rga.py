@@ -9,12 +9,21 @@ def init_rga():
         RGA100: An instance of the RGA100 class.
     """
     load_dotenv()
-    usb_serial_device_identifier = os.getenv(
-        "RGA_USB_SERIAL_DEVICE_IDENTIFIER", "/dev/tty.usbserial-FTEIZFXM"
-    )
-    baud_rate = int(os.getenv("RGA_BAUD_RATE", "28800"))
+    interface_type = os.getenv("RGA_INTERFACE_TYPE", "serial")
+    if interface_type == "serial":
+        usb_serial_device_identifier = os.getenv(
+            "RGA_USB_SERIAL_DEVICE_IDENTIFIER", "/dev/tty.usbserial-FTEIZFXM"
+        )
+        baud_rate = int(os.getenv("RGA_BAUD_RATE", "28800"))
 
-    rga = RGA100("serial", usb_serial_device_identifier, baud_rate)
+        rga = RGA100(interface_type, usb_serial_device_identifier, baud_rate)
+    elif interface_type == "tcpip":
+        ip_address = os.getenv("RGA_IP_ADDRESS", "192.168.127.254")
+        port = int(os.getenv("RGA_PORT", "9001"))
+
+        rga = RGA100(interface_type, ip_address, port)
+    else:
+        raise ValueError(f"Unsupported RGA interface type: {interface_type}")
     return rga
 
 

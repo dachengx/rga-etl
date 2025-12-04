@@ -34,6 +34,11 @@ To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, vi
 
 To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`.
 
+To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
+
+1. The protocol type should be Telnet. After the adapter connects to the PC by Ethernet cable, the RGA is equivalently connected to a new serial port. This mode needs a Windows installed software. The software installs the adapter's driver each time it connects to the PC.
+2. The protocol type should be Raw TCP. After the adapter connects to the PC or PLC by Ethernet cable, set the protocol type by via (http://192.168.127.254/serialport1.html)[http://192.168.127.254/serialport1.html]. Then send and receive data via TCP sockets.
+
 ## srsinst.rga
 
 The repo is based on the python wrapped interface for RGA communication. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
