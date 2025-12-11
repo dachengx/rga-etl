@@ -2,6 +2,8 @@
 
 Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
 
+There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and PLC, be aware of this.
+
 ## Docker services
 
 All commands, unless emphasized, are running in Command Prompt (`cmd`).
@@ -36,7 +38,7 @@ To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`.
 
 To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
-1. The protocol type should be Telnet. After the adapter connects to the PC by Ethernet cable, the RGA is equivalently connected to a new serial port. This mode needs a Windows installed software. The software installs the adapter's driver each time it connects to the PC.
+1. The protocol type should be Telnet. After the adapter connects to the PC by Ethernet cable, the RGA is equivalently connected to a new serial port. This mode needs a [Windows installed software](https://www.brainboxes.com/faq/where-can-i-find-the-windows-drivers-for-my-ethernet-to-serial). The software installs the adapter's driver each time it connects to the PC.
 2. The protocol type should be Raw TCP. After the adapter connects to the PC or PLC by Ethernet cable, set the protocol type by via (http://192.168.127.254/serialport1.html)[http://192.168.127.254/serialport1.html]. Then send and receive data via TCP sockets.
 
 ## srsinst.rga
