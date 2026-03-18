@@ -2,6 +2,9 @@
 name = "rga_etl"
 version = "0.0.0"
 description = "Extract, transform, and load the data from an SRS RGA200"
+authors = [
+  "Dacheng Xu, <dx2227@columbia.edu>",
+]
 readme = "README.md"
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -17,9 +20,9 @@ classifiers = [
 repository = "https://github.com/dachengx/rga-etl"
 
 [tool.poetry.scripts]
-rga_test = "rga_etl.scripts.rga_test:main"
-rga_analog_scan = "rga_etl.scripts.rga_analog_scan:main"
-rga_p_vs_t_scan = "rga_etl.scripts.rga_p_vs_t_scan:main"
+rga_test = "rga_etl.pc.scripts.rga_test:main"
+rga_analog_scan = "rga_etl.pc.scripts.rga_analog_scan:main"
+rga_p_vs_t_scan = "rga_etl.pc.scripts.rga_p_vs_t_scan:main"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"

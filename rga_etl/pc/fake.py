@@ -3,7 +3,7 @@ import math
 from types import SimpleNamespace
 import datetime as dt
 import numpy as np
-from rga_etl.rga import set_rga_analog_scan_parameters
+from rga_etl.pc.rga import set_rga_analog_scan_parameters
 
 
 def fake_analog_scan():

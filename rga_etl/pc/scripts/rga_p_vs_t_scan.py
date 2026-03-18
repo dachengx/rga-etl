@@ -6,10 +6,10 @@ import datetime as dt
 import numpy as np
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
-from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga, set_rga_parameters_to_execution, rga_turn_off_filament
-from rga_etl.mysql import Execution, PvsTScan, PvsTScanPoint
-from rga_etl.fake import fake_p_vs_t_scan
+from rga_etl.databases.utils import init_session, init_instrument
+from rga_etl.pc.rga import init_rga, set_rga_parameters_to_execution, rga_turn_off_filament
+from rga_etl.databases.mysql import Execution, PvsTScan, PvsTScanPoint
+from rga_etl.pc.fake import fake_p_vs_t_scan
 
 
 def p_vs_t_scan(session, masses):
