@@ -5,8 +5,10 @@ from srsinst.rga import RGA100
 
 def init_rga():
     """Initialize the RGA100 device with parameters from environment variables.
+
     Returns:
         RGA100: An instance of the RGA100 class.
+
     """
     load_dotenv()
     interface_type = os.getenv("RGA_INTERFACE_TYPE", "serial")
@@ -29,8 +31,10 @@ def init_rga():
 
 def set_rga_analog_scan_parameters(rga):
     """Set the RGA100 analog scan parameters from environment variables.
+
     Args:
         rga (RGA100): An instance of the RGA100 class.
+
     """
     rga.scan.initial_mass = int(os.getenv("RGA_INITIAL_MASS", "1"))
     rga.scan.final_mass = int(os.getenv("RGA_FINAL_MASS", "200"))
@@ -40,10 +44,12 @@ def set_rga_analog_scan_parameters(rga):
 
 def set_rga_parameters_to_execution(rga, execution):
     """Set RGA parameters to the execution object.
+
     Make sure this is called after initializing the filament.
     Args:
         rga (RGA100): An instance of the RGA100 class.
         execution (Execution): An instance of the Execution class.
+
     """
     execution.detector = "FC"
     execution.electron_energy = rga.ionizer.electron_energy
@@ -58,8 +64,10 @@ def set_rga_parameters_to_execution(rga, execution):
 
 def rga_turn_off_filament():
     """Turn off the RGA filament if it is on.
-    This function is useful to ensure the filament is turned off
-    in case of an unexpected error during execution.
+
+    This function is useful to ensure the filament is turned off in case of an unexpected error
+    during execution.
+
     """
     load_dotenv()
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"

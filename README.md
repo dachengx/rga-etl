@@ -47,7 +47,7 @@ The repo is based on the python wrapped interface for RGA communication. Referen
 
 ## RGA Operation Controlled Directly from PC
 
-Related codes are in `rga_etl\pc`. 
+Related codes are in `rga_etl\pc`.
 
 In a nominal operation, the RGA should be controled by a PLC, but directly connecting RGA with PC reduces the complexity during communication and helps understanding how RGA works.
 
@@ -73,4 +73,4 @@ The settings of RGA can be defined in `.env`:
 
 ## RGA Operation Controlled by PC via PLC
 
-Related codes are in `rga_etl\pc_plc`. 
+Related codes are in `rga_etl\pc_plc`.

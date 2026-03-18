@@ -15,8 +15,10 @@ from rga_etl.pc.fake import fake_analog_scan
 
 def analog_scan(session):
     """Performs an analog scan and records the data in the database.
+
     Args:
         session: SQLAlchemy session object.
+
     """
     load_dotenv()
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
