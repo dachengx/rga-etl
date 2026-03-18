@@ -1,5 +1,5 @@
-from rga_etl.utils import init_session, init_instrument
-from rga_etl.rga import init_rga
+from rga_etl.databases.utils import init_session, init_instrument
+from rga_etl.pc.rga import init_rga
 
 
 def main():

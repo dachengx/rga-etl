@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from rga_etl.mysql import Instrument, ensure_schema
+from rga_etl.databases.mysql import Instrument, ensure_schema
 
 
 def mysql_url():

@@ -2,7 +2,7 @@
 
 Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
 
-There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and PLC, be aware of this.
+There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
 
 ## Docker services
 
@@ -45,9 +45,13 @@ To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
 The repo is based on the python wrapped interface for RGA communication. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
 
-## RGA Measurement
+## RGA Operation Controlled Directly from PC
 
-After installing the package by `pip install -e ./ --user`, make sure that the `.local/bin` is in your `PATH` environmental variable by `export PATH="$HOME/.local/bin:$PATH"`.
+Related codes are in `rga_etl\pc`. 
+
+In a nominal operation, the RGA should be controled by a PLC, but directly connecting RGA with PC reduces the complexity during communication and helps understanding how RGA works.
+
+After installing the package by `pip install -e ./ --user`, make sure that the `.local/bin` is in your `PATH` environmental variable by `export PATH="$HOME/.local/bin:$PATH"` if using a Linux, or set the `PATH` environmental variable correspondingly if using a Windows.
 
 These commands do different operation:
 
@@ -66,3 +70,7 @@ The settings of RGA can be defined in `.env`:
 5. `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, and `MYSQL_DB` are the environmental variable needed by the MySQL database connection.
 6. `RGA_INITIAL_MASS`, `RGA_FINAL_MASS`, `RGA_RESOLUTION`, and `RGA_SCAN_SPEED` are the environmental variable needed by the analog scan.
 7. `RGA_MASSES`, `RGA_SCAN_TOTAL_TIME` and `RGA_SCAN_TIME_INTERVAL` are the environmental variable needed by the pressure vs time scan.
+
+## RGA Operation Controlled by PC via PLC
+
+Related codes are in `rga_etl\pc_plc`. 
