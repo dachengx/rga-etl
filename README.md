@@ -1,5 +1,7 @@
 # RGA-ETL
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dachengx/rga-etl/main.svg)](https://results.pre-commit.ci/latest/github/dachengx/rga-etl/main)
+
 Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
 
 There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
