@@ -1,5 +1,7 @@
 # RGA-ETL
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dachengx/rga-etl/main.svg)](https://results.pre-commit.ci/latest/github/dachengx/rga-etl/main)
+
 Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
 
 There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
@@ -47,7 +49,7 @@ The repo is based on the python wrapped interface for RGA communication. Referen
 
 ## RGA Operation Controlled Directly from PC
 
-Related codes are in `rga_etl\pc`. 
+Related codes are in `rga_etl\pc`.
 
 In a nominal operation, the RGA should be controled by a PLC, but directly connecting RGA with PC reduces the complexity during communication and helps understanding how RGA works.
 
@@ -73,4 +75,4 @@ The settings of RGA can be defined in `.env`:
 
 ## RGA Operation Controlled by PC via PLC
 
-Related codes are in `rga_etl\pc_plc`. 
+Related codes are in `rga_etl\pc_plc`.

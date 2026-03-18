@@ -68,9 +68,7 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             logging.warning(f"Invalid JSON: {e}")
             self._set_headers(400)
             self.wfile.write(
-                json.dumps(
-                    {"status": "error", "message": f"Invalid JSON: {e}"}
-                ).encode()
+                json.dumps({"status": "error", "message": f"Invalid JSON: {e}"}).encode()
             )
             return
 
@@ -139,7 +137,6 @@ def main():
         logging.info("Closing listening socket...")
         server.server_close()
         logging.info("Socket closed.")
-
 
 
 if __name__ == "__main__":
