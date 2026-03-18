@@ -23,7 +23,7 @@ logging.info(f"Connected to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}")
 command = {
     "main": "ID?\r",
     "length": 128,
-    "noresult": False
+    "noresult": False,
     # commented out because RGA can not change timeout
     # "timeout": 10000,  # in milliseconds
 }
