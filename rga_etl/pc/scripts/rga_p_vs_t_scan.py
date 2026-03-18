@@ -13,11 +13,13 @@ from rga_etl.pc.fake import fake_p_vs_t_scan
 
 
 def p_vs_t_scan(session, masses):
-    """Performs a pressure vs time scan for the specified masses
-    and records the data in the database.
+    """Performs a pressure vs time scan for the specified masses and records the data in the
+    database.
+
     Args:
         session: SQLAlchemy session object.
         masses (list): List of masses to scan.
+
     """
     load_dotenv()
     total_time = float(os.getenv("RGA_SCAN_TOTAL_TIME", "60"))

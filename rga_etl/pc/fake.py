@@ -8,6 +8,7 @@ from rga_etl.pc.rga import set_rga_analog_scan_parameters
 
 def fake_analog_scan():
     """Returns a fake RGA object, mass axis, and spectrum for testing analog scan purposes.
+
     Returns:
         rga: SimpleNamespace
             A fake RGA object with scan parameters set.
@@ -15,6 +16,7 @@ def fake_analog_scan():
             An array of mass/charge values.
         intensities: np.ndarray
             An array of random intensities corresponding to the mass axis.
+
     """
     rga = SimpleNamespace(scan=SimpleNamespace())
     set_rga_analog_scan_parameters(rga)
@@ -25,6 +27,7 @@ def fake_analog_scan():
 
 def fake_p_vs_t_scan(started_at, masses, total_time, time_interval):
     """Returns a fake RGA object, times, and intensities for testing pressure vs time scan purposes.
+
     Args:
         started_at (datetime): The start time of the scan.
         masses (list): List of masses to scan.
@@ -37,6 +40,7 @@ def fake_p_vs_t_scan(started_at, masses, total_time, time_interval):
             A 2D array of time points for each mass.
         intensities: np.ndarray
             A 2D array of random intensities for each mass at each time point.
+
     """
     rga = SimpleNamespace(scan=SimpleNamespace())
     set_rga_analog_scan_parameters(rga)
