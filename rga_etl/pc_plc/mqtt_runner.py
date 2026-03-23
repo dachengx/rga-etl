@@ -5,6 +5,8 @@ import threading
 
 import paho.mqtt.client as mqtt
 
+from rga_etl.pc_plc.post_command import process as post_process
+
 
 class MQTTCommandRunner:
     def __init__(
@@ -52,10 +54,10 @@ class MQTTCommandRunner:
 
     def on_message(self, client, userdata, msg):
         try:
-            payload = msg.payload.decode("utf-8", errors="replace")
-            logging.info(f"Received on {msg.topic}: {payload}")
+            result = post_process(self.current_command or {}, msg.payload)
+            logging.info(f"Received on {msg.topic}: {result}")
 
-            self.current_result = payload
+            self.current_result = result
 
             if self.current_wait_event is not None:
                 self.current_wait_event.set()
