@@ -79,6 +79,8 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         for key, value in data.items():
             topic = f"{MQTT_TOPIC_PREFIX}/{key}"
             try:
+                if isinstance(value, list):
+                    value = sorted(value)
                 mqtt_client.publish(topic, str(value))
                 published.append(f"{key}: {value}")
             except Exception as e:
@@ -103,6 +105,7 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 # -------------------------
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 
 def main():
