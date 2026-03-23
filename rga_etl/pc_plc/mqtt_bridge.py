@@ -160,7 +160,20 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             )
             return
 
-        # Validate required fields
+        if self.path == "/p_vs_t_scan":
+            self._handle_pvs_t_scan(data)
+        elif self.path == "/single_mass_scan":
+            self._handle_single_mass_scan(data)
+        else:
+            logging.warning(f"Unknown endpoint: {self.path}")
+            self._set_headers(404)
+            self.wfile.write(
+                json.dumps(
+                    {"status": "error", "message": f"Unknown endpoint: {self.path}"}
+                ).encode()
+            )
+
+    def _handle_pvs_t_scan(self, data):
         try:
             masses = data["MR"]
             total_time = float(data["TOTALTIME"])
@@ -173,7 +186,6 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
             return
 
-        # Reject if scan already running
         if scan_controller.is_running():
             logging.error("Scan already running — rejecting new command.")
             self._set_headers(409)
@@ -195,6 +207,45 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 {
                     "status": "ok",
                     "message": f"Scan started for masses {masses}",
+                }
+            ).encode()
+        )
+
+    def _handle_single_mass_scan(self, data):
+        try:
+            mass = float(data["MR"])
+        except (KeyError, ValueError) as e:
+            logging.warning(f"Invalid payload: {e}")
+            self._set_headers(400)
+            self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
+            return
+
+        if scan_controller.is_running():
+            logging.error("Scan already running — rejecting new command.")
+            self._set_headers(409)
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "status": "error",
+                        "message": "Scan already running. Wait for it to finish.",
+                    }
+                ).encode()
+            )
+            return
+
+        commands = (
+            INIT_COMMANDS
+            + [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
+            + END_COMMANDS
+        )
+        scan_controller.runner.submit_commands(commands)
+
+        self._set_headers(200)
+        self.wfile.write(
+            json.dumps(
+                {
+                    "status": "ok",
+                    "message": f"Single mass scan started for mass {mass}",
                 }
             ).encode()
         )
