@@ -2,30 +2,30 @@
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dachengx/rga-etl/main.svg)](https://results.pre-commit.ci/latest/github/dachengx/rga-etl/main)
 
-Extract, transform, and load the data from an SRS RGA200 to a MySQL database.
+Extract, transform, and load the data from an [https://www.thinksrs.com/products/rga.htm](SRS RGA200) to a MySQL database. Residual Gas Analyzer (RGA) is a mass spectrometer to measure the residual gas pressure in vacuum systems.
 
 There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
 
 ## Docker services
 
-All commands, unless emphasized, are running in Command Prompt (`cmd`).
-After installation of docker from [https://www.docker.com/](Docker Website), run
+All commands, unless emphasized, are running in PowerShell.
+After installation of docker from [Docker Website](https://www.docker.com/), run
 
 ```
 mkdir C:\mysql-data
 mkdir C:\grafana-data
 ```
 
-Check the usable address by `ipconfig` or (`Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` in PowerShell), and set `MQTT_BROKER` in `docker-compose.tml` as the "Ethernet"'s ip address.
+Check the usable address by `Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` or (`ipconfig` in `cmd`), and set `MQTT_BROKER` in `docker-compose.tml` as the "Ethernet"'s ip address.
 
-```
-docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
-```
-or
 ```
 docker compose -f "$HOME\rga-etl\docker-compose.yml" up -d
 ```
-in PowerShell.
+or
+```
+docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
+```
+in `cmd`.
 
 Test mosquito sub/pub model
 
@@ -45,7 +45,7 @@ To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
 ## srsinst.rga
 
-The repo is based on the python wrapped interface for RGA communication. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
+The repo is based on the python wrapped interface for RGA communication. The RGA controlled directly by PC is built on top of it. It is also a good reference of data handling even for PC-PLC setup. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
 
 ## RGA Operation Controlled Directly from PC
 
