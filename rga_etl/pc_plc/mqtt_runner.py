@@ -1,4 +1,3 @@
-import os
 import time
 import queue
 import logging
@@ -6,7 +5,7 @@ import threading
 
 import paho.mqtt.client as mqtt
 
-logging.basicConfig(level=logging.INFO)
+from rga_etl.pc_plc.post_command import process as post_process
 
 
 class MQTTCommandRunner:
@@ -55,10 +54,10 @@ class MQTTCommandRunner:
 
     def on_message(self, client, userdata, msg):
         try:
-            payload = msg.payload.decode("utf-8", errors="replace")
-            logging.info(f"Received on {msg.topic}: {payload}")
+            result = post_process(self.current_command or {}, msg.payload)
+            logging.info(f"Received on {msg.topic}: {result}")
 
-            self.current_result = payload
+            self.current_result = result
 
             if self.current_wait_event is not None:
                 self.current_wait_event.set()
@@ -69,6 +68,9 @@ class MQTTCommandRunner:
     # -------------------------
     # Basic MQTT operations
     # -------------------------
+    def is_busy(self):
+        return not self.command_queue.empty() or self.current_command is not None
+
     def connect(self):
         self.client.connect(self.broker, self.port, 60)
         self.client.loop_start()
@@ -93,12 +95,9 @@ class MQTTCommandRunner:
     # -------------------------
     # Public API
     # -------------------------
-    def submit_command(self, command):
-        self.command_queue.put(command)
-
     def submit_commands(self, commands):
         for command in commands:
-            self.submit_command(command)
+            self.command_queue.put(command)
 
     # -------------------------
     # Internal worker
@@ -140,73 +139,6 @@ class MQTTCommandRunner:
                 logging.info("Command does not require result, continuing immediately")
 
             self.command_queue.task_done()
+            self.current_command = None
 
             time.sleep(self.sleep_between_commands)  # small delay between commands
-
-
-# -------------------------
-# Config
-# -------------------------
-MQTT_BROKER = os.getenv("MQTT_BROKER", "169.254.11.119")
-MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
-MQTT_TOPIC_PREFIX = "brx/control"
-
-
-# -------------------------
-# Main
-# -------------------------
-if __name__ == "__main__":
-    runner = MQTTCommandRunner(
-        broker=MQTT_BROKER,
-        port=MQTT_PORT,
-        topic_prefix=MQTT_TOPIC_PREFIX,
-    )
-
-    runner.connect()
-
-    commands = [
-        {
-            "main": "ID?\r",
-            "length": 128,
-            "noresult": 0,
-            "timeout": 1.0,
-        },
-        {
-            "main": "IN0\r",
-            "length": 128,
-            "noresult": 0,
-            "timeout": 1.0,
-        },
-        {
-            "main": "FL1.0\r",
-            "length": 128,
-            "noresult": 0,
-            "timeout": 10.0,
-        },
-        {
-            "main": "MR28\r",
-            "length": 4,
-            "noresult": 0,
-            "timeout": 1.0,
-        },
-        {
-            "main": "MR0\r",
-            "length": 128,
-            "noresult": 1,
-            "timeout": 1.0,
-        },
-        {
-            "main": "FL0.0\r",
-            "length": 128,
-            "noresult": 0,
-            "timeout": 10.0,
-        },
-    ]
-
-    runner.submit_commands(commands)
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        runner.disconnect()

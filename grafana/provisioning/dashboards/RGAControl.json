@@ -32,7 +32,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 11,
+        "w": 12,
         "x": 0,
         "y": 0
       },
@@ -64,7 +64,7 @@
           {
             "allowCustomValue": false,
             "id": "MR",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "options": [
               {
                 "id": "2",
@@ -93,7 +93,7 @@
             ],
             "optionsSource": "Custom",
             "section": "",
-            "title": "Single Mass Measurement",
+            "title": "Single Masses",
             "tooltip": "AMU to measure",
             "type": "checkboxList",
             "uid": "5e4b6171-40c2-42c6-82f8-8377b064b8ce",
@@ -103,7 +103,7 @@
           {
             "disableIf": "",
             "id": "TOTALTIME",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "section": "",
             "title": "Total Time",
             "tooltip": "Total time of P vs T scan",
@@ -116,7 +116,7 @@
           {
             "disableIf": "",
             "id": "TIMEINTERVAL",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "section": "",
             "title": "Time Interval",
             "tooltip": "Time interval in P vs T scan",
@@ -170,7 +170,7 @@
         },
         "sync": true,
         "update": {
-          "code": "/**\n * Update Request Code for Volkov Labs Business Forms:\n * This code is executed when the form's submit button is clicked.\n * Sends specific data to an API endpoint.\n */\n\n// Wrap in 'async' to enable await functionality\n(async () => {\n  // --- Debugging (Optional - remove in production) ---\n  // console.log(\"Context object:\", context);\n  // console.log(\"Context elements:\", context.elements);\n  // --- End Debugging ---\n\n  // 'context.elements' is an array of all configured form elements.\n  const elements = context.panel.elements;\n  console.log(\"Raw context.elements object:\", elements); // debugging\n  const elementsToInclude = Array.isArray(elements) ? elements : [];\n\n  // Construct the payload; key-value pairs of form element IDs and their values.\n  const payload = {};\n\n  if (elementsToInclude.length > 0) {\n    elementsToInclude.forEach((element) => {\n      console.log(\n        `Processing element: ID='${element.id}', Value='${element.value}', Type='${element.type}'`\n      ); // debugging\n\n      payload[element.id] = element.value;\n    });\n  } else {\n    // Log a warning if no elements are found.\n    console.warn(\"No form elements found to send to API.\");\n  }\n\n  payload.timestamp = Date.now();\n  console.log(\"Payload being sent:\", payload); // debugging\n\n  // Define the API endpoint where the data will be sent.\n  const apiEndpoint = \"http://localhost:8080\"; // TODO: Change this to your actual API endpoint.\n\n  // Define HTTP request options for the fetch call.\n  const requestOptions = {\n    method: \"POST\", // TODO: Determine if POST or PUT is more appropriate.\n    headers: {\n      \"Content-Type\": \"application/json\",\n    },\n    // Convert the JavaScript payload object into JSON for the request body.\n    body: JSON.stringify(payload),\n  };\n\n  // Helper function to display notifications\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === \"function\") {\n      context.panel[type](message);\n    } else {\n      // Fallback to console if the notification function is not available\n      console[type === \"error\" ? \"error\" : \"log\"](\"Notification:\", message);\n    }\n  };\n\n  // Make the HTTP request using the Fetch API.\n  try {\n    const response = await fetch(apiEndpoint, requestOptions);\n\n    if (!response.ok) {\n      const errorData = await response\n        .json()\n        .catch(() => ({\n          message:\n            \"Unknown API error, non-JSON response or empty body.\",\n        }));\n\n      showNotification(\n        \"error\",\n        \"API Error: \" + (errorData.message || response.statusText)\n      );\n      console.error(\"API Error:\", response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n\n    showNotification(\"success\", \"Data published successfully!\");\n    console.log(\"API Response:\", result);\n\n    // Optional: TODO: call initial request to update form values?\n  } catch (error) {\n    // Catch network errors (e.g., endpoint unreachable, CORS).\n    showNotification(\"error\", \"Network Error: \" + error.message);\n    console.error(\"Network Error:\", error);\n  }\n})();\n",
+          "code": "/**\n * Update Request Code for Volkov Labs Business Forms:\n * This code is executed when the form's submit button is clicked.\n * Sends specific data to an API endpoint.\n */\n\n// Wrap in 'async' to enable await functionality\n(async () => {\n  // --- Debugging (Optional - remove in production) ---\n  // console.log(\"Context object:\", context);\n  // console.log(\"Context elements:\", context.elements);\n  // --- End Debugging ---\n\n  // 'context.elements' is an array of all configured form elements.\n  const elements = context.panel.elements;\n  console.log(\"Raw context.elements object:\", elements); // debugging\n  const elementsToInclude = Array.isArray(elements) ? elements : [];\n\n  // Construct the payload; key-value pairs of form element IDs and their values.\n  const payload = {};\n\n  if (elementsToInclude.length > 0) {\n    elementsToInclude.forEach((element) => {\n      console.log(\n        `Processing element: ID='${element.id}', Value='${element.value}', Type='${element.type}'`\n      ); // debugging\n\n      payload[element.id] = element.value;\n    });\n  } else {\n    // Log a warning if no elements are found.\n    console.warn(\"No form elements found to send to API.\");\n  }\n\n  payload.timestamp = Date.now();\n  console.log(\"Payload being sent:\", payload); // debugging\n\n  // Define the API endpoint where the data will be sent.\n  const apiEndpoint = \"http://localhost:8080/p_vs_t_scan\";\n\n  // Define HTTP request options for the fetch call.\n  const requestOptions = {\n    method: \"POST\", // TODO: Determine if POST or PUT is more appropriate.\n    headers: {\n      \"Content-Type\": \"application/json\",\n    },\n    // Convert the JavaScript payload object into JSON for the request body.\n    body: JSON.stringify(payload),\n  };\n\n  // Helper function to display notifications\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === \"function\") {\n      context.panel[type](message);\n    } else {\n      // Fallback to console if the notification function is not available\n      console[type === \"error\" ? \"error\" : \"log\"](\"Notification:\", message);\n    }\n  };\n\n  // Make the HTTP request using the Fetch API.\n  try {\n    const response = await fetch(apiEndpoint, requestOptions);\n\n    if (!response.ok) {\n      const errorData = await response\n        .json()\n        .catch(() => ({\n          message:\n            \"Unknown API error, non-JSON response or empty body.\",\n        }));\n\n      showNotification(\n        \"error\",\n        \"API Error: \" + (errorData.message || response.statusText)\n      );\n      console.error(\"API Error:\", response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n\n    showNotification(\"success\", \"Data published successfully!\");\n    console.log(\"API Response:\", result);\n\n    // Optional: TODO: call initial request to update form values?\n  } catch (error) {\n    // Catch network errors (e.g., endpoint unreachable, CORS).\n    showNotification(\"error\", \"Network Error: \" + error.message);\n    console.error(\"Network Error:\", error);\n  }\n})();\n",
           "confirm": false,
           "contentType": "application/json",
           "getPayload": "const payload = {};\ncontext.panel.elements.forEach((element) => {\n  if (!element.value) {\n    return;\n  }\n  payload[element.id] = element.value;\n})\nreturn payload;",
@@ -192,6 +192,430 @@
         }
       ],
       "title": "P vs T Scan Control",
+      "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "disableIf": "",
+            "id": "MR",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Mass (AMU)",
+            "tooltip": "Single AMU mass to measure",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000001",
+            "unit": "AMU",
+            "value": 0,
+            "width": 50
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "book",
+          "text": "Submit",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const elements = context.panel.elements;\n  const mr = elements.find((e) => e.id === 'MR');\n  if (!mr) {\n    console.error('MR element not found');\n    return;\n  }\n\n  const payload = { MR: mr.value };\n  console.log('Payload being sent:', payload);\n\n  const apiEndpoint = 'http://localhost:8080/single_mass_scan';\n\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch(apiEndpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('API Error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', 'Measurement started!');\n    console.log('API Response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Single Mass Scan",
+      "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 3,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "disableIf": "",
+            "id": "INITIAL_MASS",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Initial Mass",
+            "tooltip": "Initial mass for analog scan (AMU)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000002",
+            "unit": "AMU",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "FINAL_MASS",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Final Mass",
+            "tooltip": "Final mass for analog scan (AMU)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000003",
+            "unit": "AMU",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "SCAN_RATE",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Scan Rate",
+            "tooltip": "Scan speed: 0 (slowest) to 7 (fastest)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000004",
+            "unit": "",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "STEPS_PER_AMU",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Steps / AMU",
+            "tooltip": "Steps per AMU: 10 to 25",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000005",
+            "unit": "",
+            "value": 0,
+            "width": 50
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "book",
+          "text": "Submit",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const elements = context.panel.elements;\n  const get = (id) => elements.find((e) => e.id === id)?.value;\n\n  const payload = {\n    INITIAL_MASS: get('INITIAL_MASS'),\n    FINAL_MASS: get('FINAL_MASS'),\n    SCAN_RATE: get('SCAN_RATE'),\n    STEPS_PER_AMU: get('STEPS_PER_AMU'),\n  };\n  console.log('Payload being sent:', payload);\n\n  const apiEndpoint = 'http://localhost:8080/analog_scan';\n\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch(apiEndpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('API Error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', result.message || 'Analog scan started!');\n    console.log('API Response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Analog Scan",
+      "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 4,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "disableIf": "",
+            "id": "COMMAND",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Command",
+            "tooltip": "Command string to send (include \\r if needed)",
+            "type": "string",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000006",
+            "value": "IN0"
+          },
+          {
+            "disableIf": "",
+            "id": "LENGTH",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Result Length",
+            "tooltip": "Expected response length in bytes",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000007",
+            "unit": "bytes",
+            "value": 128,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "WITH_RESULT",
+            "labelWidth": 20,
+            "options": [
+              {"id": "0", "label": "No",  "type": "number", "value": 1},
+              {"id": "1", "label": "Yes", "type": "number", "value": 0}
+            ],
+            "optionsSource": "Custom",
+            "section": "",
+            "title": "With Result",
+            "tooltip": "Whether to wait for a result (noresult=0 means yes)",
+            "type": "select",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000008",
+            "value": 1
+          },
+          {
+            "disableIf": "",
+            "id": "TIMEOUT",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Timeout",
+            "tooltip": "Timeout in seconds",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000009",
+            "unit": "sec",
+            "value": 1,
+            "width": 50
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "book",
+          "text": "Submit",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const elements = context.panel.elements;\n  const get = (id) => elements.find((e) => e.id === id)?.value;\n\n  const payload = {\n    COMMAND: get('COMMAND'),\n    LENGTH: get('LENGTH'),\n    WITH_RESULT: get('WITH_RESULT'),\n    TIMEOUT: get('TIMEOUT'),\n  };\n  console.log('Payload being sent:', payload);\n\n  const apiEndpoint = 'http://localhost:8080/arbitrary_command';\n\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch(apiEndpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('API Error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', result.message || 'Command sent!');\n    console.log('API Response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Arbitrary Command",
       "type": "volkovlabs-form-panel"
     }
   ],
