@@ -41,54 +41,51 @@ class ScanState:
             f"interval={time_interval}s, cycles={n_cycles}"
         )
 
+        runner.run_commands(INIT_COMMANDS)
+        param_results = runner.run_commands(PARAM_COMMANDS)
+
+        started_at = dt.datetime.utcnow()
+        scan_start = time.time()
+        scan_points = []
+
+        for i in range(n_cycles):
+            if self._stop_scan.is_set():
+                break
+
+            cycle_start = time.time()
+            cycle_time = cycle_start - scan_start
+            logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
+
+            for mass in sorted_masses:
+                results = runner.run_commands(
+                    [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
+                )
+                scan_points.append(PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0]))
+
+            elapsed = time.time() - cycle_start
+            if elapsed > time_interval:
+                logging.warning(
+                    f"Cycle {i + 1} took {elapsed:.1f}s, " f"longer than interval {time_interval}s"
+                )
+            else:
+                self._stop_scan.wait(timeout=time_interval - elapsed)
+
+        runner.run_commands(END_COMMANDS)
+
+        ended_at = dt.datetime.utcnow()
+        total_elapsed = time.time() - scan_start
+        if total_elapsed > total_time:
+            logging.warning(
+                f"Scan took {total_elapsed:.1f}s, " f"longer than assigned total_time {total_time}s"
+            )
+
         Session = init_session()
         with Session() as session:
             instrument = init_instrument(session)
             execution = Execution(instrument_id=instrument.id)
+            fill_execution_params(execution, param_results)
             session.add(execution)
             session.flush()
-
-            runner.run_commands(INIT_COMMANDS)
-            fill_execution_params(execution, runner.run_commands(PARAM_COMMANDS))
-
-            started_at = dt.datetime.utcnow()
-            scan_start = time.time()
-            scan_points = []
-
-            for i in range(n_cycles):
-                if self._stop_scan.is_set():
-                    break
-
-                cycle_start = time.time()
-                cycle_time = cycle_start - scan_start
-                logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
-
-                for mass in sorted_masses:
-                    results = runner.run_commands(
-                        [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
-                    )
-                    scan_points.append(
-                        PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0])
-                    )
-
-                elapsed = time.time() - cycle_start
-                if elapsed > time_interval:
-                    logging.warning(
-                        f"Cycle {i + 1} took {elapsed:.1f}s, "
-                        f"longer than interval {time_interval}s"
-                    )
-                else:
-                    self._stop_scan.wait(timeout=time_interval - elapsed)
-
-            runner.run_commands(END_COMMANDS)
-
-            ended_at = dt.datetime.utcnow()
-            total_elapsed = time.time() - scan_start
-            if total_elapsed > total_time:
-                logging.warning(
-                    f"Scan took {total_elapsed:.1f}s, "
-                    f"longer than assigned total_time {total_time}s"
-                )
 
             scan = PvsTScan(
                 execution_id=execution.id,
@@ -103,13 +100,11 @@ class ScanState:
             for point in scan_points:
                 point.scan_id = scan.id
             session.bulk_save_objects(scan_points)
+            execution.end()
             try:
                 session.commit()
             except IntegrityError:
                 session.rollback()
-
-            execution.end()
-            session.commit()
 
         logging.info("Scan loop finished.")
 

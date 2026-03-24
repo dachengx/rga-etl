@@ -26,15 +26,6 @@ def p_vs_t_scan(session, masses):
     time_interval = float(os.getenv("RGA_SCAN_TIME_INTERVAL", "5"))
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
 
-    instrument = init_instrument(session)
-
-    execution = Execution(
-        instrument_id=instrument.id,
-        _fake_execution=fake,
-    )
-    session.add(execution)
-    session.flush()
-
     if fake:
         started_at = dt.datetime.utcnow()
         rga, times, intensities = fake_p_vs_t_scan(started_at, masses, total_time, time_interval)
@@ -43,8 +34,6 @@ def p_vs_t_scan(session, masses):
     else:
         rga = init_rga()
         rga.filament.turn_on()
-
-        set_rga_parameters_to_execution(rga, execution)
 
         started_at = dt.datetime.utcnow()
         times = []
@@ -61,6 +50,13 @@ def p_vs_t_scan(session, masses):
         intensities = np.array(intensities)
         rga.filament.turn_off()
 
+    instrument = init_instrument(session)
+    execution = Execution(instrument_id=instrument.id, _fake_execution=fake)
+    if not fake:
+        set_rga_parameters_to_execution(rga, execution)
+    session.add(execution)
+    session.flush()
+
     scan = PvsTScan(
         execution_id=execution.id,
         started_at=started_at,
@@ -69,7 +65,7 @@ def p_vs_t_scan(session, masses):
         time_interval=time_interval,
     )
     session.add(scan)
-    session.flush()  # get scan.id
+    session.flush()
 
     session.bulk_save_objects(
         [
@@ -77,13 +73,11 @@ def p_vs_t_scan(session, masses):
             for m, t, i in zip(masses.flatten(), times.flatten(), intensities.flatten())
         ]
     )
+    execution.end()
     try:
         session.commit()
     except IntegrityError:
         session.rollback()
-
-    execution.end()
-    session.commit()
 
 
 def main():

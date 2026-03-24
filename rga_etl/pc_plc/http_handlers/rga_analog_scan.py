@@ -47,30 +47,32 @@ class AnalogScanHandler:
             {"main": "SC1\r", "length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
         ]
 
+        self.runner.run_commands(INIT_COMMANDS)
+        param_results = self.runner.run_commands(PARAM_COMMANDS)
+
+        started_at = dt.datetime.utcnow()
+        results = self.runner.run_commands(commands)
+        ended_at = dt.datetime.utcnow()
+        self.runner.run_commands(END_COMMANDS)
+
+        # results[4] = AP? (expected number of data points)
+        # results[5] = SC1 (intensities, last element is total pressure)
+        ap_n = results[4]
+        if ap_n != n:
+            logging.warning(f"AP? returned {ap_n} data points, expected {n}")
+
+        intensities = results[5][:-1]
+        total_pressure = results[5][-1]
+        step = 1.0 / steps_per_amu
+        mass_axis = np.arange(initial_mass, final_mass + step / 2.0, step)
+
         Session = init_session()
         with Session() as session:
             instrument = init_instrument(session)
             execution = Execution(instrument_id=instrument.id)
+            fill_execution_params(execution, param_results)
             session.add(execution)
             session.flush()
-
-            self.runner.run_commands(INIT_COMMANDS)
-            fill_execution_params(execution, self.runner.run_commands(PARAM_COMMANDS))
-
-            started_at = dt.datetime.utcnow()
-            results = self.runner.run_commands(commands)
-            ended_at = dt.datetime.utcnow()
-            self.runner.run_commands(END_COMMANDS)
-
-            # results[4] = AP? (expected number of data points)
-            # results[5] = SC1 (intensities, last element is total pressure)
-            ap_n = results[4]
-            if ap_n != n:
-                logging.warning(f"AP? returned {ap_n} data points, expected {n}")
-
-            intensities = results[5][:-1]
-            step = 1.0 / steps_per_amu
-            mass_axis = np.arange(initial_mass, final_mass + step / 2.0, step)
 
             scan = AnalogScan(
                 execution_id=execution.id,
@@ -90,15 +92,12 @@ class AnalogScanHandler:
                     for a, i in zip(mass_axis, intensities)
                 ]
             )
+            execution.end()
             try:
                 session.commit()
             except IntegrityError:
                 session.rollback()
 
-            execution.end()
-            session.commit()
-
-        total_pressure = results[5][-1]
         self._set_headers(200)
         self.wfile.write(
             json.dumps(
