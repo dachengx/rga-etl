@@ -8,9 +8,9 @@ import socketserver
 import logging
 
 from rga_etl.pc_plc.mqtt_runner import MQTTCommandRunner
-from rga_etl.pc_plc.http_handlers.pvs_t_scan import PvsTScanHandler, scan_state
-from rga_etl.pc_plc.http_handlers.single_mass_scan import SingleMassScanHandler
-from rga_etl.pc_plc.http_handlers.analog_scan import AnalogScanHandler
+from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import PvsTScanHandler, scan_state
+from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import SingleMassScanHandler
+from rga_etl.pc_plc.http_handlers.rga_analog_scan import AnalogScanHandler
 from rga_etl.pc_plc.http_handlers.arbitrary_command import ArbitraryCommandHandler
 
 # -------------------------
@@ -48,7 +48,7 @@ class CustomHTTPRequestHandler(
     runner = runner
 
     _ROUTES = {
-        "/p_vs_t_scan": "_handle_pvs_t_scan",
+        "/p_vs_t_scan": "_handle_p_vs_t_scan",
         "/single_mass_scan": "_handle_single_mass_scan",
         "/analog_scan": "_handle_analog_scan",
         "/arbitrary_command": "_handle_arbitrary_command",

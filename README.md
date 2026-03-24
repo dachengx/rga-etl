@@ -45,7 +45,7 @@ To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
 ## srsinst.rga
 
-The repo is based on the python wrapped interface for RGA communication. The RGA controlled directly by PC is built on top of it. It is also a good reference of data handling even for PC-PLC setup. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
+The repo is based on the python wrapped interface for RGA communication. The RGA controlled directly by PC is built on top of it. It is also a good reference of data handling even for PC-PLC setup. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga) (commit `d02992b68e527aabeea0a8e2f5486bdc4589f438`).
 
 ## RGA Operation Controlled Directly from PC
 
