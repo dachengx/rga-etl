@@ -68,6 +68,9 @@ class MQTTCommandRunner:
     # -------------------------
     # Basic MQTT operations
     # -------------------------
+    def is_busy(self):
+        return not self.command_queue.empty() or self.current_command is not None
+
     def connect(self):
         self.client.connect(self.broker, self.port, 60)
         self.client.loop_start()

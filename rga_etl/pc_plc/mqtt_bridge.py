@@ -224,14 +224,14 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
             return
 
-        if scan_controller.is_running():
-            logging.error("Scan already running — rejecting new command.")
+        if scan_controller.runner.is_busy():
+            logging.error("Runner busy — rejecting new command.")
             self._set_headers(409)
             self.wfile.write(
                 json.dumps(
                     {
                         "status": "error",
-                        "message": "Scan already running. Wait for it to finish.",
+                        "message": "Runner busy. Wait for it to finish.",
                     }
                 ).encode()
             )
@@ -275,14 +275,14 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
             return
 
-        if scan_controller.is_running():
-            logging.error("Scan already running — rejecting new command.")
+        if scan_controller.runner.is_busy():
+            logging.error("Runner busy — rejecting new command.")
             self._set_headers(409)
             self.wfile.write(
                 json.dumps(
                     {
                         "status": "error",
-                        "message": "Scan already running. Wait for it to finish.",
+                        "message": "Runner busy. Wait for it to finish.",
                     }
                 ).encode()
             )
