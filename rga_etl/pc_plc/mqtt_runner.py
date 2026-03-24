@@ -95,12 +95,9 @@ class MQTTCommandRunner:
     # -------------------------
     # Public API
     # -------------------------
-    def submit_command(self, command):
-        self.command_queue.put(command)
-
     def submit_commands(self, commands):
         for command in commands:
-            self.submit_command(command)
+            self.command_queue.put(command)
 
     # -------------------------
     # Internal worker
@@ -142,5 +139,6 @@ class MQTTCommandRunner:
                 logging.info("Command does not require result, continuing immediately")
 
             self.command_queue.task_done()
+            self.current_command = None
 
             time.sleep(self.sleep_between_commands)  # small delay between commands

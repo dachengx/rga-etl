@@ -5,10 +5,6 @@ from srsinst.rga.instruments.rga100.scans import Scans
 # Post-command handlers
 # Maps command prefix -> function(raw bytes) -> processed result
 # -------------------------
-def _handle_mr(payload):
-    return Scans.convert_to_long(payload)
-
-
 def _handle_sc(payload):
     return [
         Scans.convert_to_long(payload[i : i + 4])
@@ -18,7 +14,7 @@ def _handle_sc(payload):
 
 
 _HANDLERS = {
-    "MR": _handle_mr,
+    "MR": Scans.convert_to_long,
     "AP": int,
     "SC": _handle_sc,
 }
