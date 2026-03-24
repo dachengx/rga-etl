@@ -64,7 +64,7 @@
           {
             "allowCustomValue": false,
             "id": "MR",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "options": [
               {
                 "id": "2",
@@ -93,7 +93,7 @@
             ],
             "optionsSource": "Custom",
             "section": "",
-            "title": "Single Mass Measurement",
+            "title": "Single Masses",
             "tooltip": "AMU to measure",
             "type": "checkboxList",
             "uid": "5e4b6171-40c2-42c6-82f8-8377b064b8ce",
@@ -103,7 +103,7 @@
           {
             "disableIf": "",
             "id": "TOTALTIME",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "section": "",
             "title": "Total Time",
             "tooltip": "Total time of P vs T scan",
@@ -116,7 +116,7 @@
           {
             "disableIf": "",
             "id": "TIMEINTERVAL",
-            "labelWidth": 30,
+            "labelWidth": 20,
             "section": "",
             "title": "Time Interval",
             "tooltip": "Time interval in P vs T scan",
@@ -255,7 +255,7 @@
         },
         "layout": {
           "orientation": "horizontal",
-          "padding": 40,
+          "padding": 10,
           "sectionVariant": "default",
           "variant": "single"
         },
@@ -307,6 +307,160 @@
         }
       ],
       "title": "Single Mass Scan",
+      "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 3,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "disableIf": "",
+            "id": "INITIAL_MASS",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Initial Mass",
+            "tooltip": "Initial mass for analog scan (AMU)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000002",
+            "unit": "AMU",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "FINAL_MASS",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Final Mass",
+            "tooltip": "Final mass for analog scan (AMU)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000003",
+            "unit": "AMU",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "SCAN_RATE",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Scan Rate",
+            "tooltip": "Scan speed: 0 (slowest) to 7 (fastest)",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000004",
+            "unit": "",
+            "value": 0,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "STEPS_PER_AMU",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Steps / AMU",
+            "tooltip": "Steps per AMU: 10 to 25",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000005",
+            "unit": "",
+            "value": 0,
+            "width": 50
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "book",
+          "text": "Submit",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const elements = context.panel.elements;\n  const get = (id) => elements.find((e) => e.id === id)?.value;\n\n  const payload = {\n    INITIAL_MASS: get('INITIAL_MASS'),\n    FINAL_MASS: get('FINAL_MASS'),\n    SCAN_RATE: get('SCAN_RATE'),\n    STEPS_PER_AMU: get('STEPS_PER_AMU'),\n  };\n  console.log('Payload being sent:', payload);\n\n  const apiEndpoint = 'http://localhost:8080/analog_scan';\n\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch(apiEndpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('API Error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', result.message || 'Analog scan started!');\n    console.log('API Response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Analog Scan",
       "type": "volkovlabs-form-panel"
     }
   ],

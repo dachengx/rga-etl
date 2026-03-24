@@ -9,8 +9,18 @@ def _handle_mr(payload):
     return Scans.convert_to_long(payload)
 
 
+def _handle_sc(payload):
+    return [
+        Scans.convert_to_long(payload[i : i + 4])
+        for i in range(0, len(payload), 4)
+        if len(payload[i : i + 4]) == 4
+    ]
+
+
 _HANDLERS = {
     "MR": _handle_mr,
+    "AP": int,
+    "SC": _handle_sc,
 }
 
 

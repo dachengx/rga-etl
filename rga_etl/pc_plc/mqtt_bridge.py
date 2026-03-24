@@ -164,6 +164,8 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_pvs_t_scan(data)
         elif self.path == "/single_mass_scan":
             self._handle_single_mass_scan(data)
+        elif self.path == "/analog_scan":
+            self._handle_analog_scan(data)
         else:
             logging.warning(f"Unknown endpoint: {self.path}")
             self._set_headers(404)
@@ -246,6 +248,64 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 {
                     "status": "ok",
                     "message": f"Single mass scan started for mass {mass}",
+                }
+            ).encode()
+        )
+
+    def _handle_analog_scan(self, data):
+        try:
+            initial_mass = int(data["INITIAL_MASS"])
+            final_mass = int(data["FINAL_MASS"])
+            scan_rate = int(data["SCAN_RATE"])
+            steps_per_amu = int(data["STEPS_PER_AMU"])
+            if not (1 <= initial_mass < final_mass):
+                raise ValueError(
+                    "INITIAL_MASS must be < FINAL_MASS and >= 1 "
+                    f"(got INITIAL_MASS={initial_mass}, FINAL_MASS={final_mass})"
+                )
+            if not (0 <= scan_rate <= 7):
+                raise ValueError(f"SCAN_RATE must be between 0 and 7 (got {scan_rate})")
+            if not (10 <= steps_per_amu <= 25):
+                raise ValueError(f"STEPS_PER_AMU must be between 10 and 25 (got {steps_per_amu})")
+        except (KeyError, ValueError) as e:
+            logging.warning(f"Invalid payload: {e}")
+            self._set_headers(400)
+            self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
+            return
+
+        if scan_controller.is_running():
+            logging.error("Scan already running — rejecting new command.")
+            self._set_headers(409)
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "status": "error",
+                        "message": "Scan already running. Wait for it to finish.",
+                    }
+                ).encode()
+            )
+            return
+
+        # There is a last byte in the response of SC comand that indicates the total pressure
+        n = (final_mass - initial_mass) * steps_per_amu + 1
+        logging.info(f"Analog scan: n={n} data points")
+        commands = [
+            {"main": f"MI{initial_mass}\r", "length": 128, "noresult": 1, "timeout": 1.0},
+            {"main": f"MF{final_mass}\r", "length": 128, "noresult": 1, "timeout": 1.0},
+            {"main": f"NF{scan_rate}\r", "length": 128, "noresult": 1, "timeout": 1.0},
+            {"main": f"SA{steps_per_amu}\r", "length": 128, "noresult": 1, "timeout": 1.0},
+            {"main": f"AP?\r", "length": 128, "noresult": 0, "timeout": 1.0},
+            {"main": f"SC1\r", "length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
+        ]
+        commands = INIT_COMMANDS + commands + END_COMMANDS
+        scan_controller.runner.submit_commands(commands)
+
+        self._set_headers(200)
+        self.wfile.write(
+            json.dumps(
+                {
+                    "status": "ok",
+                    "message": f"Analog scan started: mass {initial_mass}-{final_mass}, {n} points",
                 }
             ).encode()
         )
