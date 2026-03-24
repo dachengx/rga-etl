@@ -166,6 +166,8 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_single_mass_scan(data)
         elif self.path == "/analog_scan":
             self._handle_analog_scan(data)
+        elif self.path == "/arbitrary_command":
+            self._handle_arbitrary_command(data)
         else:
             logging.warning(f"Unknown endpoint: {self.path}")
             self._set_headers(404)
@@ -306,6 +308,34 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 {
                     "status": "ok",
                     "message": f"Analog scan started: mass {initial_mass}-{final_mass}, {n} points",
+                }
+            ).encode()
+        )
+
+    def _handle_arbitrary_command(self, data):
+        try:
+            command = str(data["COMMAND"])
+            length = int(data["LENGTH"])
+            noresult = int(data["WITH_RESULT"])
+            timeout = float(data["TIMEOUT"])
+            if not command.endswith("\r"):
+                command += "\r"
+        except (KeyError, ValueError) as e:
+            logging.warning(f"Invalid payload: {e}")
+            self._set_headers(400)
+            self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode())
+            return
+
+        scan_controller.runner.submit_commands(
+            [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
+        )
+
+        self._set_headers(200)
+        self.wfile.write(
+            json.dumps(
+                {
+                    "status": "ok",
+                    "message": f"Command sent: {command!r}",
                 }
             ).encode()
         )

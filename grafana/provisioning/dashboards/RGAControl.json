@@ -462,6 +462,161 @@
       ],
       "title": "Analog Scan",
       "type": "volkovlabs-form-panel"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 4,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "md"
+        },
+        "confirmModal": {
+          "body": "Please confirm to update changed values",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Confirm",
+          "elementDisplayMode": "modified",
+          "title": "Confirm update request"
+        },
+        "elementValueChanged": "",
+        "elements": [
+          {
+            "disableIf": "",
+            "id": "COMMAND",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Command",
+            "tooltip": "Command string to send (include \\r if needed)",
+            "type": "string",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000006",
+            "value": "IN0"
+          },
+          {
+            "disableIf": "",
+            "id": "LENGTH",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Result Length",
+            "tooltip": "Expected response length in bytes",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000007",
+            "unit": "bytes",
+            "value": 128,
+            "width": 50
+          },
+          {
+            "disableIf": "",
+            "id": "WITH_RESULT",
+            "labelWidth": 20,
+            "options": [
+              {"id": "0", "label": "No",  "type": "number", "value": 1},
+              {"id": "1", "label": "Yes", "type": "number", "value": 0}
+            ],
+            "optionsSource": "Custom",
+            "section": "",
+            "title": "With Result",
+            "tooltip": "Whether to wait for a result (noresult=0 means yes)",
+            "type": "select",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000008",
+            "value": 1
+          },
+          {
+            "disableIf": "",
+            "id": "TIMEOUT",
+            "labelWidth": 20,
+            "section": "",
+            "title": "Timeout",
+            "tooltip": "Timeout in seconds",
+            "type": "number",
+            "uid": "a1b2c3d4-0000-0000-0000-000000000009",
+            "unit": "sec",
+            "value": 1,
+            "width": 50
+          }
+        ],
+        "initial": {
+          "code": "",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "purple",
+          "foregroundColor": "yellow",
+          "icon": "book",
+          "text": "Submit",
+          "variant": "primary"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const elements = context.panel.elements;\n  const get = (id) => elements.find((e) => e.id === id)?.value;\n\n  const payload = {\n    COMMAND: get('COMMAND'),\n    LENGTH: get('LENGTH'),\n    WITH_RESULT: get('WITH_RESULT'),\n    TIMEOUT: get('TIMEOUT'),\n  };\n  console.log('Payload being sent:', payload);\n\n  const apiEndpoint = 'http://localhost:8080/arbitrary_command';\n\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch(apiEndpoint, {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify(payload),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('API Error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', result.message || 'Command sent!');\n    console.log('API Response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": false,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Arbitrary Command",
+      "type": "volkovlabs-form-panel"
     }
   ],
   "preload": false,
