@@ -38,8 +38,7 @@ class ScanState:
         )
         scan_start = time.time()
 
-        runner.submit_commands(INIT_COMMANDS)
-        runner.command_queue.join()
+        runner.run_commands(INIT_COMMANDS)
 
         for i in range(n_cycles):
             if self._stop_scan.is_set():
@@ -47,8 +46,7 @@ class ScanState:
 
             cycle_start = time.time()
             logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {masses}")
-            runner.submit_commands(build_cycle_commands(masses))
-            runner.command_queue.join()
+            runner.run_commands(build_cycle_commands(masses))
 
             elapsed = time.time() - cycle_start
             if elapsed > time_interval:
@@ -58,8 +56,7 @@ class ScanState:
             else:
                 self._stop_scan.wait(timeout=time_interval - elapsed)
 
-        runner.submit_commands(END_COMMANDS)
-        runner.command_queue.join()
+        runner.run_commands(END_COMMANDS)
 
         total_elapsed = time.time() - scan_start
         if total_elapsed > total_time:

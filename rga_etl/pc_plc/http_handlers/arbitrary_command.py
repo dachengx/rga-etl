@@ -14,16 +14,11 @@ class ArbitraryCommandHandler:
             self._reject(400, str(e))
             return
 
-        self.runner.submit_commands(
+        results = self.runner.run_commands(
             [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
         )
 
         self._set_headers(200)
         self.wfile.write(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "message": f"Command sent: {command!r}",
-                }
-            ).encode()
+            json.dumps({"status": "ok", "command": command, "result": results[0]}).encode()
         )

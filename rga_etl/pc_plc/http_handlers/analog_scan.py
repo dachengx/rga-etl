@@ -35,14 +35,30 @@ class AnalogScanHandler:
             {"main": "AP?\r", "length": 128, "noresult": 0, "timeout": 1.0},
             {"main": "SC1\r", "length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
         ]
-        self.runner.submit_commands(INIT_COMMANDS + commands + END_COMMANDS)
+
+        self.runner.run_commands(INIT_COMMANDS)
+        results = self.runner.run_commands(commands)
+        self.runner.run_commands(END_COMMANDS)
+
+        # results[4] = AP? (expected number of data points)
+        # results[5] = SC1 (intensities, last element is total pressure)
+        ap_n = results[4]
+        if ap_n != n:
+            logging.warning(f"AP? returned {ap_n} data points, expected {n}")
+
+        intensities = results[5][:-1]
+        total_pressure = results[5][-1]
 
         self._set_headers(200)
         self.wfile.write(
             json.dumps(
                 {
                     "status": "ok",
-                    "message": f"Analog scan started: mass {initial_mass}-{final_mass}, {n} points",
+                    "initial_mass": initial_mass,
+                    "final_mass": final_mass,
+                    "n": n,
+                    "total_pressure": total_pressure,
+                    "intensities": intensities,
                 }
             ).encode()
         )

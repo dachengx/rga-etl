@@ -95,9 +95,13 @@ class MQTTCommandRunner:
     # -------------------------
     # Public API
     # -------------------------
-    def submit_commands(self, commands):
+    def run_commands(self, commands):
+        results = []
         for command in commands:
             self.command_queue.put(command)
+            self.command_queue.join()
+            results.append(self.current_result if command.get("noresult", 0) == 0 else None)
+        return results
 
     # -------------------------
     # Internal worker
