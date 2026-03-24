@@ -26,6 +26,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(message)s",
 )
+logging.getLogger("mysql.connector").setLevel(logging.WARNING)
 
 runner = MQTTCommandRunner(
     broker=MQTT_BROKER,
@@ -85,11 +86,7 @@ class CustomHTTPRequestHandler(
             if not isinstance(data, dict):
                 raise ValueError("JSON must be an object")
         except Exception as e:
-            logging.warning(f"Invalid JSON: {e}")
-            self._set_headers(400)
-            self.wfile.write(
-                json.dumps({"status": "error", "message": f"Invalid JSON: {e}"}).encode()
-            )
+            self._reject(400, f"Invalid JSON: {e}")
             return
 
         busy_reason = (
@@ -98,26 +95,17 @@ class CustomHTTPRequestHandler(
             else "Runner busy" if runner.is_busy() else None
         )
         if busy_reason:
-            logging.error(f"{busy_reason} — rejecting new command.")
-            self._set_headers(409)
-            self.wfile.write(
-                json.dumps(
-                    {"status": "error", "message": f"{busy_reason}. Wait for it to finish."}
-                ).encode()
-            )
+            self._reject(409, f"{busy_reason}. Wait for it to finish.")
             return
 
         handler = getattr(self, self._ROUTES.get(self.path, ""), None)
         if handler:
-            handler(data)
+            try:
+                handler(data)
+            except TimeoutError as e:
+                self._reject(500, str(e))
         else:
-            logging.warning(f"Unknown endpoint: {self.path}")
-            self._set_headers(404)
-            self.wfile.write(
-                json.dumps(
-                    {"status": "error", "message": f"Unknown endpoint: {self.path}"}
-                ).encode()
-            )
+            self._reject(404, f"Unknown endpoint: {self.path}")
 
 
 # -------------------------

@@ -100,7 +100,10 @@ class MQTTCommandRunner:
         for command in commands:
             self.command_queue.put(command)
             self.command_queue.join()
-            results.append(self.current_result if command.get("noresult", 0) == 0 else None)
+            result = self.current_result
+            if isinstance(result, Exception):
+                raise result
+            results.append(result if command.get("noresult", 0) == 0 else None)
         return results
 
     # -------------------------
@@ -136,7 +139,9 @@ class MQTTCommandRunner:
                 if ok:
                     logging.info(f"Command finished with result: {self.current_result}")
                 else:
-                    logging.warning(f"Timeout waiting for result for command: {command}")
+                    self.current_result = TimeoutError(
+                        f"Timeout waiting for result for command: {command}"
+                    )
 
                 self.current_wait_event = None
             else:

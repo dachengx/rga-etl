@@ -11,11 +11,15 @@ class SingleMassScanHandler:
             self._reject(400, str(e))
             return
 
-        self.runner.run_commands(INIT_COMMANDS)
-        results = self.runner.run_commands(
-            [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
-        )
-        self.runner.run_commands(END_COMMANDS)
+        try:
+            self.runner.run_commands(INIT_COMMANDS)
+            results = self.runner.run_commands(
+                [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
+            )
+            self.runner.run_commands(END_COMMANDS)
+        except TimeoutError as e:
+            self._reject(500, str(e))
+            return
 
         self._set_headers(200)
         self.wfile.write(

@@ -14,9 +14,13 @@ class ArbitraryCommandHandler:
             self._reject(400, str(e))
             return
 
-        results = self.runner.run_commands(
-            [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
-        )
+        try:
+            results = self.runner.run_commands(
+                [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
+            )
+        except TimeoutError as e:
+            self._reject(500, str(e))
+            return
 
         self._set_headers(200)
         self.wfile.write(

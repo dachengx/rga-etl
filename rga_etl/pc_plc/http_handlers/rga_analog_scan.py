@@ -47,19 +47,29 @@ class AnalogScanHandler:
             {"main": "SC1\r", "length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
         ]
 
-        self.runner.run_commands(INIT_COMMANDS)
-        param_results = self.runner.run_commands(PARAM_COMMANDS)
+        try:
+            self.runner.run_commands(INIT_COMMANDS)
+            param_results = self.runner.run_commands(PARAM_COMMANDS)
 
-        started_at = dt.datetime.utcnow()
-        results = self.runner.run_commands(commands)
-        ended_at = dt.datetime.utcnow()
-        self.runner.run_commands(END_COMMANDS)
+            started_at = dt.datetime.utcnow()
+            results = self.runner.run_commands(commands)
+            ended_at = dt.datetime.utcnow()
+            self.runner.run_commands(END_COMMANDS)
+        except TimeoutError as e:
+            self._reject(500, str(e))
+            return
 
         # results[4] = AP? (expected number of data points)
         # results[5] = SC1 (intensities, last element is total pressure)
         ap_n = results[4]
         if ap_n != n:
-            logging.warning(f"AP? returned {ap_n} data points, expected {n}")
+            self._reject(500, f"AP? returned {ap_n} data points, expected {n}")
+            return
+
+        sc_len = len(results[5])
+        if sc_len != n + 1:
+            self._reject(500, f"SC1 returned {sc_len} values, expected {n + 1}")
+            return
 
         intensities = results[5][:-1]
         total_pressure = results[5][-1]

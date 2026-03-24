@@ -41,42 +41,49 @@ class ScanState:
             f"interval={time_interval}s, cycles={n_cycles}"
         )
 
-        runner.run_commands(INIT_COMMANDS)
-        param_results = runner.run_commands(PARAM_COMMANDS)
+        try:
+            runner.run_commands(INIT_COMMANDS)
+            param_results = runner.run_commands(PARAM_COMMANDS)
 
-        started_at = dt.datetime.utcnow()
-        scan_start = time.time()
-        scan_points = []
+            started_at = dt.datetime.utcnow()
+            scan_start = time.time()
+            scan_points = []
 
-        for i in range(n_cycles):
-            if self._stop_scan.is_set():
-                break
+            for i in range(n_cycles):
+                if self._stop_scan.is_set():
+                    break
 
-            cycle_start = time.time()
-            cycle_time = cycle_start - scan_start
-            logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
+                cycle_start = time.time()
+                cycle_time = cycle_start - scan_start
+                logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
 
-            for mass in sorted_masses:
-                results = runner.run_commands(
-                    [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
-                )
-                scan_points.append(PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0]))
+                for mass in sorted_masses:
+                    results = runner.run_commands(
+                        [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
+                    )
+                    scan_points.append(
+                        PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0])
+                    )
 
-            elapsed = time.time() - cycle_start
-            if elapsed > time_interval:
-                logging.warning(
-                    f"Cycle {i + 1} took {elapsed:.1f}s, " f"longer than interval {time_interval}s"
-                )
-            else:
-                self._stop_scan.wait(timeout=time_interval - elapsed)
+                elapsed = time.time() - cycle_start
+                if elapsed > time_interval:
+                    logging.warning(
+                        f"Cycle {i + 1} took {elapsed:.1f}s, "
+                        f"longer than interval {time_interval}s"
+                    )
+                else:
+                    self._stop_scan.wait(timeout=time_interval - elapsed)
 
-        runner.run_commands(END_COMMANDS)
+            runner.run_commands(END_COMMANDS)
+        except TimeoutError as e:
+            logging.error(f"Scan aborted: {e}")
+            return
 
         ended_at = dt.datetime.utcnow()
         total_elapsed = time.time() - scan_start
         if total_elapsed > total_time:
             logging.warning(
-                f"Scan took {total_elapsed:.1f}s, " f"longer than assigned total_time {total_time}s"
+                f"Scan took {total_elapsed:.1f}s, longer than assigned total_time {total_time}s"
             )
 
         Session = init_session()
