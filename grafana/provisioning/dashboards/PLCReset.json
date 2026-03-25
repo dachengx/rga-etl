@@ -1,0 +1,141 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 3,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 4
+      },
+      "id": 1,
+      "options": {
+        "buttonGroup": {
+          "orientation": "center",
+          "size": "lg"
+        },
+        "confirmModal": {
+          "body": "This will reset the PLC. Continue?",
+          "cancel": "Cancel",
+          "columns": {
+            "include": ["name", "oldValue", "newValue"],
+            "name": "Label",
+            "newValue": "New Value",
+            "oldValue": "Old Value"
+          },
+          "confirm": "Reset",
+          "elementDisplayMode": "modified",
+          "title": "Confirm PLC Reset"
+        },
+        "elementValueChanged": "",
+        "elements": [],
+        "initial": {
+          "code": "context.panel.enableSubmit();",
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "highlight": false,
+          "highlightColor": "red",
+          "method": "-",
+          "payload": {}
+        },
+        "layout": {
+          "orientation": "horizontal",
+          "padding": 10,
+          "sectionVariant": "default",
+          "variant": "single"
+        },
+        "reset": {
+          "icon": "crosshair",
+          "text": "Reset",
+          "variant": "hidden"
+        },
+        "resetAction": {
+          "code": "",
+          "confirm": false,
+          "getPayload": "return {}",
+          "mode": "initial",
+          "payload": {}
+        },
+        "saveDefault": {
+          "icon": "save",
+          "text": "Save Default",
+          "variant": "hidden"
+        },
+        "submit": {
+          "backgroundColor": "red",
+          "foregroundColor": "white",
+          "icon": "power-off",
+          "text": "Reset PLC",
+          "variant": "destructive"
+        },
+        "sync": true,
+        "update": {
+          "code": "(async () => {\n  const showNotification = (type, message) => {\n    if (context.panel && typeof context.panel[type] === 'function') {\n      context.panel[type](message);\n    } else {\n      console[type === 'error' ? 'error' : 'log']('Notification:', message);\n    }\n  };\n\n  try {\n    const response = await fetch('http://localhost:8080/reset', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({}),\n    });\n\n    if (!response.ok) {\n      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));\n      showNotification('error', 'API Error: ' + (errorData.message || response.statusText));\n      console.error('Reset error:', response.status, errorData);\n      return;\n    }\n\n    const result = await response.json();\n    showNotification('success', result.message || 'PLC reset complete');\n    console.log('Reset response:', result);\n  } catch (error) {\n    showNotification('error', 'Network Error: ' + error.message);\n    console.error('Network Error:', error);\n  }\n})();\n",
+          "confirm": true,
+          "contentType": "application/json",
+          "getPayload": "return {}",
+          "method": "-",
+          "payload": {},
+          "payloadMode": "all"
+        },
+        "updateEnabled": "auto"
+      },
+      "pluginVersion": "6.3.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+          },
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "PLC Reset",
+      "type": "volkovlabs-form-panel"
+    }
+  ],
+  "preload": false,
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "PLCReset",
+  "uid": "plcreset",
+  "version": 1
+}

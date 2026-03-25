@@ -12,6 +12,7 @@ from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import handle_p_vs_t_scan, sca
 from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import handle_single_mass_scan
 from rga_etl.pc_plc.http_handlers.rga_analog_scan import handle_analog_scan
 from rga_etl.pc_plc.http_handlers.arbitrary_command import handle_arbitrary_command
+from rga_etl.pc_plc.http_handlers.plc_reset import handle_reset
 
 # -------------------------
 # Config
@@ -61,6 +62,11 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         "/arbitrary_command": {
             "handler": handle_arbitrary_command,
             "publish": "generic",
+            "subscribe": "result",
+        },
+        "/reset": {
+            "handler": handle_reset,
+            "publish": "reset",
             "subscribe": "result",
         },
     }
