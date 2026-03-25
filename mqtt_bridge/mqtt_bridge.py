@@ -15,7 +15,7 @@ import paho.mqtt.client as mqtt
 HTTP_PORT = 8080
 MQTT_BROKER = os.getenv("MQTT_BROKER", "mosquitto")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
-MQTT_TOPIC_PREFIX = "brx/control"
+MQTT_TOPIC_PREFIX = "plc"
 GRAFANA_ORIGIN = "http://localhost:3000"
 
 logging.basicConfig(

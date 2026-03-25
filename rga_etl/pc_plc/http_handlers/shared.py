@@ -1,26 +1,26 @@
 from srsinst.rga.instruments.rga100.components import Pressure
 
 INIT_COMMANDS = [
-    {"main": "ID?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "IN0\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "FL1.0\r", "length": 128, "noresult": 0, "timeout": 10.0},
+    {"rga/main": "ID?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "IN0\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "FL1.0\r", "rga/length": 128, "noresult": 0, "timeout": 10.0},
 ]
 
 END_COMMANDS = [
-    {"main": "MR0\r", "length": 128, "noresult": 1, "timeout": 1.0},
-    {"main": "FL0.0\r", "length": 128, "noresult": 0, "timeout": 10.0},
+    {"rga/main": "MR0\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
+    {"rga/main": "FL0.0\r", "rga/length": 128, "noresult": 0, "timeout": 10.0},
 ]
 
 # Query RGA instrument parameters after filament is on.
 # Results order: EE, IE, VF, FL, SP, ST, TP
 PARAM_COMMANDS = [
-    {"main": "EE?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "IE?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "VF?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "FL?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "SP?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "ST?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-    {"main": "TP?\r", "length": 4, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "EE?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "IE?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "VF?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "FL?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "SP?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "ST?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+    {"rga/main": "TP?\r", "rga/length": 4, "noresult": 0, "timeout": 1.0},
 ]
 
 # Assumed FC (Faraday Cup) detector — no CEM gain correction applied.

@@ -8,10 +8,11 @@ import socketserver
 import logging
 
 from rga_etl.pc_plc.mqtt_runner import MQTTCommandRunner
-from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import PvsTScanHandler, scan_state
-from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import SingleMassScanHandler
-from rga_etl.pc_plc.http_handlers.rga_analog_scan import AnalogScanHandler
-from rga_etl.pc_plc.http_handlers.arbitrary_command import ArbitraryCommandHandler
+from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import handle_p_vs_t_scan, scan_state
+from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import handle_single_mass_scan
+from rga_etl.pc_plc.http_handlers.rga_analog_scan import handle_analog_scan
+from rga_etl.pc_plc.http_handlers.rga_arbitrary_command import handle_arbitrary_command
+from rga_etl.pc_plc.http_handlers.plc_reset import handle_reset
 
 # -------------------------
 # Config
@@ -19,7 +20,7 @@ from rga_etl.pc_plc.http_handlers.arbitrary_command import ArbitraryCommandHandl
 HTTP_PORT = 8080
 MQTT_BROKER = os.getenv("MQTT_BROKER", "169.254.11.119")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
-MQTT_TOPIC_PREFIX = "brx/control"
+MQTT_TOPIC_PREFIX = "plc"
 GRAFANA_ORIGIN = "http://localhost:3000"
 
 logging.basicConfig(
@@ -39,21 +40,40 @@ runner.connect()
 # -------------------------
 # HTTP Handler
 # -------------------------
-class CustomHTTPRequestHandler(
-    PvsTScanHandler,
-    SingleMassScanHandler,
-    AnalogScanHandler,
-    ArbitraryCommandHandler,
-    http.server.BaseHTTPRequestHandler,
-):
+class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     runner = runner
 
     _ROUTES = {
-        "/p_vs_t_scan": "_handle_p_vs_t_scan",
-        "/single_mass_scan": "_handle_single_mass_scan",
-        "/analog_scan": "_handle_analog_scan",
-        "/arbitrary_command": "_handle_arbitrary_command",
+        "/rga_p_vs_t_scan": {
+            "handler": handle_p_vs_t_scan,
+            "publish": "rga/generic",
+            "subscribe": "result",
+        },
+        "/rga_single_mass_scan": {
+            "handler": handle_single_mass_scan,
+            "publish": "rga/generic",
+            "subscribe": "result",
+        },
+        "/rga_analog_scan": {
+            "handler": handle_analog_scan,
+            "publish": "rga/generic",
+            "subscribe": "result",
+        },
+        "/rga_arbitrary_command": {
+            "handler": handle_arbitrary_command,
+            "publish": "rga/generic",
+            "subscribe": "result",
+        },
+        "/reset": {
+            "handler": handle_reset,
+            "publish": "reset",
+            "subscribe": "result",
+        },
     }
+
+    def _run_commands(self, commands, publish, subscribe):
+        decorated = [{"publish": publish, "subscribe": subscribe, **cmd} for cmd in commands]
+        return self.runner.run_commands(decorated)
 
     def log_message(self, format, *args):
         logging.debug("%s - %s" % (self.client_address[0], format % args))
@@ -98,10 +118,10 @@ class CustomHTTPRequestHandler(
             self._reject(409, f"{busy_reason}. Wait for it to finish.")
             return
 
-        handler = getattr(self, self._ROUTES.get(self.path, ""), None)
-        if handler:
+        route = self._ROUTES.get(self.path)
+        if route:
             try:
-                handler(data)
+                route["handler"](self, data, route["publish"], route["subscribe"])
             except TimeoutError as e:
                 self._reject(500, str(e))
         else:

@@ -14,15 +14,11 @@ class MQTTCommandRunner:
         broker,
         port,
         topic_prefix,
-        publish_topic_suffix="generic",
-        result_topic_suffix="result",
         sleep_between_commands=0.0,
     ):
         self.broker = broker
         self.port = port
         self.topic_prefix = topic_prefix
-        self.publish_topic = f"{topic_prefix}/{publish_topic_suffix}"
-        self.result_topic = f"{topic_prefix}/{result_topic_suffix}"
         self.sleep_between_commands = sleep_between_commands
 
         self.client = mqtt.Client()
@@ -47,8 +43,6 @@ class MQTTCommandRunner:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logging.info(f"Connected to MQTT broker at {self.broker}:{self.port}")
-            client.subscribe(self.result_topic)
-            logging.info(f"Subscribed to {self.result_topic}")
         else:
             logging.error(f"MQTT connect failed with rc={rc}")
 
@@ -95,6 +89,13 @@ class MQTTCommandRunner:
         except Exception as e:
             logging.error(f"Failed to publish to {topic}: {e}")
 
+    def subscribe(self, topic):
+        try:
+            self.client.subscribe(topic)
+            logging.info(f"Subscribed to {topic}")
+        except Exception as e:
+            logging.error(f"Failed to subscribe to {topic}: {e}")
+
     # -------------------------
     # Public API
     # -------------------------
@@ -129,11 +130,17 @@ class MQTTCommandRunner:
                     continue
                 topic = f"{self.topic_prefix}/{key}"
                 self.publish(topic, value)
+
+            publish_topic = f"{self.topic_prefix}/{command['publish']}"
+            subscribe_topic = f"{self.topic_prefix}/{command['subscribe']}"
+
             # must inform the subscriber to start executing the command after all parameters are set
-            self.publish(self.publish_topic, 1)
+            self.publish(publish_topic, 1)
 
             # wait only if result is expected
             if command.get("noresult", 0) == 0:
+                self.subscribe(subscribe_topic)
+
                 self.current_wait_event = threading.Event()
 
                 logging.info("Waiting for result...")

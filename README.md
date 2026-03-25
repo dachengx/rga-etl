@@ -6,6 +6,10 @@ Extract, transform, and load the data from an [SRS RGA200](https://www.thinksrs.
 
 There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
 
+## PLC used
+
+The PLC used in this repo is [BRX Do-more PLC BX-DM1E-10ER3-D](https://www.automationdirect.com/adc/shopping/catalog/programmable_controllers/brx_plcs_(stackable_micro_brick)/plcs_-a-_cpus/bx-dm1e-10er3-d). Using [Do-more Designer](https://www.automationdirect.com/support/software-downloads?itemcode=Do-more%20Designer), the PLC can be restarted (set to `Program` then `Run` mode) if the PLC mode switch position is at `Terminal`.
+
 ## Docker services
 
 All commands, unless emphasized, are running in PowerShell.
