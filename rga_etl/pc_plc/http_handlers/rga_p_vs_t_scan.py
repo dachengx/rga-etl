@@ -152,35 +152,32 @@ class ScanState:
 scan_state = ScanState()
 
 
-class PvsTScanHandler:
-    scan_state = scan_state
+def handle_p_vs_t_scan(req, data, publish, subscribe):
+    try:
+        masses = data["MR"]
+        total_time = float(data["TOTALTIME"])
+        time_interval = float(data["TIMEINTERVAL"])
+        if not isinstance(masses, list) or len(masses) == 0:
+            raise ValueError("MR must be a non-empty list of masses")
+    except (KeyError, ValueError) as e:
+        req._reject(400, str(e))
+        return
 
-    def _handle_p_vs_t_scan(self, data):
-        try:
-            masses = data["MR"]
-            total_time = float(data["TOTALTIME"])
-            time_interval = float(data["TIMEINTERVAL"])
-            if not isinstance(masses, list) or len(masses) == 0:
-                raise ValueError("MR must be a non-empty list of masses")
-        except (KeyError, ValueError) as e:
-            self._reject(400, str(e))
-            return
+    scan_state.start(
+        req.runner,
+        masses,
+        total_time,
+        time_interval,
+        publish,
+        subscribe,
+    )
 
-        self.scan_state.start(
-            self.runner,
-            masses,
-            total_time,
-            time_interval,
-            self.publish_topic_prefix,
-            self.subscribe_topic_prefix,
-        )
-
-        self._set_headers(200)
-        self.wfile.write(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "message": f"Scan started for masses {masses}",
-                }
-            ).encode()
-        )
+    req._set_headers(200)
+    req.wfile.write(
+        json.dumps(
+            {
+                "status": "ok",
+                "message": f"Scan started for masses {masses}",
+            }
+        ).encode()
+    )

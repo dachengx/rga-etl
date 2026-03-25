@@ -551,7 +551,7 @@
             "type": "number",
             "uid": "a1b2c3d4-0000-0000-0000-000000000009",
             "unit": "sec",
-            "value": 1,
+            "value": 10,
             "width": 50
           }
         ],
