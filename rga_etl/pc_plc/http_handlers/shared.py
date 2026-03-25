@@ -24,8 +24,7 @@ PARAM_COMMANDS = [
 ]
 
 # Assumed FC (Faraday Cup) detector — no CEM gain correction applied.
-# Assumed no UGA inlet — reduction_factor = 1.0.
-_REDUCTION_FACTOR_MIN = 1e-12
+# Assumed no UGA inlet — reduction_factor = 1.0 (omitted).
 
 
 def fill_execution_params(execution, param_results):
@@ -37,13 +36,13 @@ def fill_execution_params(execution, param_results):
     https://github.com/thinkSRS/srsinst.rga/blob/main/srsinst/rga/instruments/rga100/components.py
 
     """
+    if len(param_results) != len(PARAM_COMMANDS):
+        raise ValueError(f"Expected {len(PARAM_COMMANDS)} param results, got {len(param_results)}")
+
     # Clamp sensitivities to LowLimit to avoid division by near-zero.
     # Mirrors: sp = Pressure.LowLimit if sp < Pressure.LowLimit else sp (line ~202)
     sp = max(param_results[4], Pressure.LowLimit)  # SP: partial pressure sensitivity (mA/Torr)
     st = max(param_results[5], Pressure.LowLimit)  # ST: total pressure sensitivity (mA/Torr)
-
-    # Mirrors: if self.reduction_factor < 1e-12: self.reduction_factor = 1e-12 (line ~205)
-    reduction_factor = max(1.0, _REDUCTION_FACTOR_MIN)
 
     execution.detector = "FC"
     execution.electron_energy = param_results[0]  # EE
@@ -55,6 +54,6 @@ def fill_execution_params(execution, param_results):
     # Mirrors: return self.total_pressure * factor (line ~192)
     execution.total_pressure = param_results[6] * 1e-13 / st
 
-    # partial_pressure_sensitivity_factor: 1e-13 / SP / reduction_factor
-    # Mirrors: factor = 1e-13 / sp / self.reduction_factor (line ~211)
-    execution.partial_pressure_sensitivity_factor = 1e-13 / sp / reduction_factor
+    # partial_pressure_sensitivity_factor: 1e-13 / SP
+    # Mirrors: factor = 1e-13 / sp / self.reduction_factor (line ~211), reduction_factor = 1.0
+    execution.partial_pressure_sensitivity_factor = 1e-13 / sp

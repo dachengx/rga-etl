@@ -6,7 +6,7 @@ class ArbitraryCommandHandler:
         try:
             command = str(data["COMMAND"])
             length = int(data["LENGTH"])
-            noresult = int(data["WITH_RESULT"])
+            noresult = 1 - int(data["WITH_RESULT"])  # WITH_RESULT=1 (Yes) → noresult=0
             timeout = float(data["TIMEOUT"])
             if not command.endswith("\r"):
                 command += "\r"

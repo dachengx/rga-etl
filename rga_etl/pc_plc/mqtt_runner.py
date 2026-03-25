@@ -53,8 +53,11 @@ class MQTTCommandRunner:
             logging.error(f"MQTT connect failed with rc={rc}")
 
     def on_message(self, client, userdata, msg):
+        if self.current_command is None:
+            logging.warning(f"Unexpected message on {msg.topic} — no command in progress, ignoring")
+            return
         try:
-            result = post_process(self.current_command or {}, msg.payload)
+            result = post_process(self.current_command, msg.payload)
             logging.info(f"Received on {msg.topic}: {result}")
 
             self.current_result = result

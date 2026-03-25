@@ -234,13 +234,15 @@
             "disableIf": "",
             "id": "MR",
             "labelWidth": 20,
+            "max": 200,
+            "min": 1,
             "section": "",
             "title": "Mass (AMU)",
-            "tooltip": "Single AMU mass to measure",
+            "tooltip": "Single AMU mass to measure (integer, 1-200)",
             "type": "number",
             "uid": "a1b2c3d4-0000-0000-0000-000000000001",
             "unit": "AMU",
-            "value": 0,
+            "value": 1,
             "width": 50
           }
         ],
@@ -528,16 +530,16 @@
             "id": "WITH_RESULT",
             "labelWidth": 20,
             "options": [
-              {"id": "0", "label": "No",  "type": "number", "value": 1},
-              {"id": "1", "label": "Yes", "type": "number", "value": 0}
+              {"id": "0", "label": "No",  "type": "number", "value": 0},
+              {"id": "1", "label": "Yes", "type": "number", "value": 1}
             ],
             "optionsSource": "Custom",
             "section": "",
             "title": "With Result",
-            "tooltip": "Whether to wait for a result (noresult=0 means yes)",
+            "tooltip": "Whether to wait for a result from the RGA",
             "type": "select",
             "uid": "a1b2c3d4-0000-0000-0000-000000000008",
-            "value": 1
+            "value": 0
           },
           {
             "disableIf": "",

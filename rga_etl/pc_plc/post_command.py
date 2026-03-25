@@ -7,11 +7,17 @@ from srsinst.rga.instruments.rga100.scans import Scans
 
 
 def _ascii_int(payload):
-    return int(payload.decode().strip())
+    try:
+        return int(payload.decode().strip())
+    except (UnicodeDecodeError, ValueError) as e:
+        raise ValueError(f"Failed to parse ASCII int from payload {payload!r}: {e}") from e
 
 
 def _ascii_float(payload):
-    return float(payload.decode().strip())
+    try:
+        return float(payload.decode().strip())
+    except (UnicodeDecodeError, ValueError) as e:
+        raise ValueError(f"Failed to parse ASCII float from payload {payload!r}: {e}") from e
 
 
 def _handle_ie(payload):

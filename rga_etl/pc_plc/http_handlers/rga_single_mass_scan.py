@@ -6,7 +6,7 @@ from rga_etl.pc_plc.http_handlers.shared import INIT_COMMANDS, END_COMMANDS
 class SingleMassScanHandler:
     def _handle_single_mass_scan(self, data):
         try:
-            mass = float(data["MR"])
+            mass = int(data["MR"])
         except (KeyError, ValueError) as e:
             self._reject(400, str(e))
             return

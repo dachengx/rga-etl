@@ -82,7 +82,7 @@ class CustomHTTPRequestHandler(
             raw_body = self.rfile.read(length)
             if not raw_body:
                 raise ValueError("Empty request body")
-            data = json.loads(raw_body.decode("utf-8", errors="ignore"))
+            data = json.loads(raw_body.decode("utf-8"))
             if not isinstance(data, dict):
                 raise ValueError("JSON must be an object")
         except Exception as e:
@@ -122,9 +122,6 @@ def main():
     def stop_server(signum, frame):
         logging.info("Ctrl+C detected — shutting down...")
         threading.Thread(target=server.shutdown).start()
-        scan_state.stop()
-        runner.disconnect()
-        logging.info("Runner stopped.")
 
     signal.signal(signal.SIGINT, stop_server)
 
@@ -135,6 +132,9 @@ def main():
         server.serve_forever()
         logging.info("HTTP server stopped.")
     finally:
+        scan_state.stop()
+        runner.disconnect()
+        logging.info("Runner stopped.")
         logging.info("Closing listening socket...")
         server.server_close()
         logging.info("Socket closed.")

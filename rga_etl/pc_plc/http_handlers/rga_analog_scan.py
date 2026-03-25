@@ -74,6 +74,7 @@ class AnalogScanHandler:
         intensities = results[5][:-1]
         total_pressure = results[5][-1]
         step = 1.0 / steps_per_amu
+        # Mirrors: Scans.get_mass_axis() in srsinst.rga, which also uses np.arange.
         mass_axis = np.arange(initial_mass, final_mass + step / 2.0, step)
 
         Session = init_session()
