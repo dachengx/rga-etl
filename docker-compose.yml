@@ -54,3 +54,4 @@ services:
     environment:
       MQTT_BROKER: 169.254.11.119
       MQTT_PORT: 1883
+      MYSQL_HOST: mysql
