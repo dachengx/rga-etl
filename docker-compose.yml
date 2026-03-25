@@ -41,11 +41,11 @@ services:
     volumes:
       - '${USERPROFILE}/mosquitto.conf:/mosquitto/config/mosquitto.conf'
 
-  pc_plc_bridge:
+  mqtt_bridge:
     build:
       context: .
-      dockerfile: pc_plc/Dockerfile
-    container_name: pc_plc_bridge
+      dockerfile: mqtt_bridge/Dockerfile
+    container_name: mqtt_bridge
     depends_on:
       - mosquitto
       - mysql
