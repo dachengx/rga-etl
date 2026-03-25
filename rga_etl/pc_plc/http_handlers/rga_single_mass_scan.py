@@ -16,8 +16,9 @@ def handle_single_mass_scan(req, data, publish, subscribe):
             [
                 {
                     "rga/command": f"MR{mass}\r",
-                    "length": 4,
+                    "nocommand": 0,
                     "noresponse": 0,
+                    "length": 4,
                     "timeout": DEFAULT_TIMEOUT,
                 }
             ],

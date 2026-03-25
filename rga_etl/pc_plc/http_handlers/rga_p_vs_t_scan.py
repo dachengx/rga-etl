@@ -93,8 +93,9 @@ class ScanState:
                         [
                             {
                                 "rga/command": f"MR{mass}\r",
-                                "length": 4,
+                                "nocommand": 0,
                                 "noresponse": 0,
+                                "length": 4,
                                 "timeout": DEFAULT_TIMEOUT,
                             }
                         ]

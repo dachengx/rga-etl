@@ -42,35 +42,46 @@ def handle_analog_scan(req, data, publish, subscribe):
     commands = [
         {
             "rga/command": f"MI{initial_mass}\r",
-            "length": DEFAULT_RESPONSE_LENGTH,
+            "nocommand": 0,
             "noresponse": 1,
+            "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
             "rga/command": f"MF{final_mass}\r",
-            "length": DEFAULT_RESPONSE_LENGTH,
+            "nocommand": 0,
             "noresponse": 1,
+            "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
             "rga/command": f"NF{scan_rate}\r",
-            "length": DEFAULT_RESPONSE_LENGTH,
+            "nocommand": 0,
             "noresponse": 1,
+            "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
             "rga/command": f"SA{steps_per_amu}\r",
-            "length": DEFAULT_RESPONSE_LENGTH,
+            "nocommand": 0,
             "noresponse": 1,
+            "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
             "rga/command": "AP?\r",
-            "length": DEFAULT_RESPONSE_LENGTH,
+            "nocommand": 0,
             "noresponse": 0,
+            "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
-        {"rga/command": "SC1\r", "length": (n + 1) * 4, "noresponse": 0, "timeout": 10.0},
+        {
+            "rga/command": "SC1\r",
+            "nocommand": 0,
+            "noresponse": 0,
+            "length": (n + 1) * 4,
+            "timeout": 10.0,
+        },
     ]
 
     try:

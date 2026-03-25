@@ -6,27 +6,42 @@ DEFAULT_TIMEOUT = 1.0
 INIT_COMMANDS = [
     {
         "rga/command": "ID?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "IN0\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
-    {"rga/command": "FL1.0\r", "length": DEFAULT_RESPONSE_LENGTH, "noresponse": 0, "timeout": 10.0},
+    {
+        "rga/command": "FL1.0\r",
+        "nocommand": 0,
+        "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
+        "timeout": 10.0,
+    },
 ]
 
 END_COMMANDS = [
     {
         "rga/command": "MR0\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 1,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
-    {"rga/command": "FL0.0\r", "length": DEFAULT_RESPONSE_LENGTH, "noresponse": 0, "timeout": 10.0},
+    {
+        "rga/command": "FL0.0\r",
+        "nocommand": 0,
+        "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
+        "timeout": 10.0,
+    },
 ]
 
 # Query RGA instrument parameters after filament is on.
@@ -34,41 +49,53 @@ END_COMMANDS = [
 PARAM_COMMANDS = [
     {
         "rga/command": "EE?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "IE?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "VF?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "FL?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "SP?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
         "rga/command": "ST?\r",
-        "length": DEFAULT_RESPONSE_LENGTH,
+        "nocommand": 0,
         "noresponse": 0,
+        "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
-    {"rga/command": "TP?\r", "length": 4, "noresponse": 0, "timeout": DEFAULT_TIMEOUT},
+    {
+        "rga/command": "TP?\r",
+        "nocommand": 0,
+        "noresponse": 0,
+        "length": 4,
+        "timeout": DEFAULT_TIMEOUT,
+    },
 ]
 
 # Assumed FC (Faraday Cup) detector — no CEM gain correction applied.

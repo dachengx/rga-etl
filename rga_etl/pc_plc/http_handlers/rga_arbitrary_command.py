@@ -18,8 +18,9 @@ def handle_arbitrary_command(req, data, publish, subscribe):
             [
                 {
                     "rga/command": command,
-                    "length": length,
+                    "nocommand": 0,
                     "noresponse": noresponse,
+                    "length": length,
                     "timeout": timeout,
                 }
             ],
