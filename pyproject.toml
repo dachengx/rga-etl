@@ -26,12 +26,12 @@ rga_p_vs_t_scan = "rga_etl.pc.scripts.rga_p_vs_t_scan:main"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-"srsinst.rga" = "*"
-sqlalchemy = "*"
-mysql-connector-python = "*"
-python-dotenv = "*"
-matplotlib = "*"
-paho-mqtt = "*"
+"srsinst.rga" = {git = "https://github.com/thinkSRS/srsinst.rga.git", rev = "d02992b68e527aabeea0a8e2f5486bdc4589f438"}
+sqlalchemy = "2.0.44"
+mysql-connector-python = "9.5.0"
+python-dotenv = "1.1.0"
+matplotlib = "3.10.7"
+paho-mqtt = "2.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]
