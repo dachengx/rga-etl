@@ -4,7 +4,7 @@
 
 Extract, transform, and load the data from an [SRS RGA200](https://www.thinksrs.com/products/rga.htm) to a MySQL database. Residual Gas Analyzer (RGA) is a mass spectrometer to measure the residual gas pressure in vacuum systems.
 
-There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
+There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adapters and programmable logic controller (PLC), be aware of this.
 
 ## PLC used
 
@@ -20,7 +20,7 @@ mkdir C:\mysql-data
 mkdir C:\grafana-data
 ```
 
-Check the usable address by `Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` or (`ipconfig` in `cmd`), and set `MQTT_BROKER` in `docker-compose.tml` as the "Ethernet"'s ip address.
+Check the usable address by `Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` or (`ipconfig` in `cmd`), and set `MQTT_BROKER` in `docker-compose.yml` as the "Ethernet"'s ip address.
 
 ```
 docker compose -f "$HOME\rga-etl\docker-compose.yml" up -d
@@ -55,28 +55,137 @@ The repo is based on the python wrapped interface for RGA communication. The RGA
 
 Related codes are in `rga_etl\pc`.
 
-In a nominal operation, the RGA should be controled by a PLC, but directly connecting RGA with PC reduces the complexity during communication and helps understanding how RGA works.
+In a nominal operation, the RGA should be controlled by a PLC, but directly connecting the RGA to the PC reduces the complexity of communication and helps with understanding how the RGA works. The PC communicates with the RGA either over RS-232 (serial mode) or via the ES-246 adapter in Raw TCP mode (tcpip mode), both handled by `srsinst.rga`.
 
-After installing the package by `pip install -e ./ --user`, make sure that the `.local/bin` is in your `PATH` environmental variable by `export PATH="$HOME/.local/bin:$PATH"` if using a Linux, or set the `PATH` environmental variable correspondingly if using a Windows.
+```
+PC
+    │ RS-232 (serial mode)  or  TCP port 9001 via ES-246 adapter (tcpip mode)
+    ▼
+RGA (SRS RGA200)
+```
 
-These commands do different operation:
+### Installation
 
-1. `rga_test` runs a self test of RGA connection and MySQL database integrity.
-2. `rga_analog_scan` runs an anlog scan and save the result to database.
-3. `rga_p_vs_t_scan` runs a pressure vs time scan of one or multiple masses and save the result to database.
+After installing the package by `pip install -e ./ --user`, make sure that `.local/bin` is in your `PATH` by running `export PATH="$HOME/.local/bin:$PATH"` on Linux, or by adding the corresponding directory to `PATH` on Windows.
 
-Please check the usage of each command by `--help`, e.g. `rga_p_vs_t_scan --help`.
+### Commands
 
-The settings of RGA can be defined in `.env`:
+| Command | Description |
+|---|---|
+| `rga_test` | Self-test of RGA connection and MySQL database integrity |
+| `rga_analog_scan` | Run an analog scan and save the result to the database |
+| `rga_p_vs_t_scan` | Run a pressure-vs-time scan of one or multiple masses and save to the database |
 
-1. `RGA_MODEL` is the model of the RAG, e.g. `RGA200`. This is needed by only by database.
-2. `RGA_SERIAL_NUMBER` is the serial number of RGA. This is needed by only by database.
-3. `RGA_BAUD_RATE` is the baud rate of the communication of host and RGA via RS-232. This is needed by only by `srsinst.rga`.
-4. `RGA_USB_SERIAL_DEVICE_IDENTIFIER` is the device identifier on the host machine. On macOS, it can be `/dev/tty.usbserial-FTEIZFXM`. This is needed by only by `srsinst.rga`.
-5. `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, and `MYSQL_DB` are the environmental variable needed by the MySQL database connection.
-6. `RGA_INITIAL_MASS`, `RGA_FINAL_MASS`, `RGA_RESOLUTION`, and `RGA_SCAN_SPEED` are the environmental variable needed by the analog scan.
-7. `RGA_MASSES`, `RGA_SCAN_TOTAL_TIME` and `RGA_SCAN_TIME_INTERVAL` are the environmental variable needed by the pressure vs time scan.
+Run any command with `--help` for full usage, e.g. `rga_p_vs_t_scan --help`. The `rga_p_vs_t_scan` command also accepts a `--masses` flag to override `RGA_MASSES` from the command line.
+
+During each scan the filament is turned on automatically at the start and turned off at the end. If an unexpected error occurs mid-scan, the filament is turned off before the exception is re-raised.
+
+### Environment variables
+
+All settings are read from `.env` at runtime.
+
+**RGA connection**
+
+| Variable | Default | Description |
+|---|---|---|
+| `RGA_INTERFACE_TYPE` | `serial` | Connection mode: `serial` for direct RS-232, `tcpip` for ES-246 Raw TCP |
+| `RGA_USB_SERIAL_DEVICE_IDENTIFIER` | `/dev/tty.usbserial-FTEIZFXM` | Serial port name (serial mode only). Use `/dev/ttyUSB0` style on Linux or `COM9` style on Windows |
+| `RGA_BAUD_RATE` | `28800` | Baud rate for RS-232 (serial mode only) |
+| `RGA_IP_ADDRESS` | `192.168.127.254` | IP address of the ES-246 adapter (tcpip mode only) |
+| `RGA_PORT` | `9001` | TCP port of the ES-246 adapter (tcpip mode only) |
+
+**Database**
+
+| Variable | Default | Description |
+|---|---|---|
+| `RGA_MODEL` | `RGA200` | Model name of the RGA, used to identify the instrument in the database |
+| `RGA_SERIAL_NUMBER` | `17405` | Serial number of the RGA, stored in the database on first run |
+| `MYSQL_HOST` | `127.0.0.1` | MySQL server hostname |
+| `MYSQL_PORT` | `3306` | MySQL port |
+| `MYSQL_USER` | `rga_user` | MySQL username |
+| `MYSQL_PASSWORD` | `rgapw` | MySQL password |
+| `MYSQL_DB` | `rga` | MySQL database name |
+
+**Analog scan**
+
+| Variable | Default | Description |
+|---|---|---|
+| `RGA_INITIAL_MASS` | `1` | First mass in amu |
+| `RGA_FINAL_MASS` | `200` | Last mass in amu |
+| `RGA_RESOLUTION` | `10` | Steps per amu (10–25) |
+| `RGA_SCAN_SPEED` | `3` | Scan speed (0–7) |
+
+**Pressure-vs-time scan**
+
+| Variable | Default | Description |
+|---|---|---|
+| `RGA_MASSES` | — | Comma-separated list of masses in amu, e.g. `2,18,28,32,44` |
+| `RGA_SCAN_TOTAL_TIME` | `60` | Total scan duration in seconds |
+| `RGA_SCAN_TIME_INTERVAL` | `5` | Interval between measurements in seconds |
+
+**Other**
+
+| Variable | Default | Description |
+|---|---|---|
+| `FAKE_EXECUTION` | `0` | Set to `1` to run a dry-run without connecting to the RGA or writing real data |
 
 ## RGA Operation Controlled by PC via PLC
 
 Related codes are in `rga_etl\pc_plc`.
+
+In this mode the PC does not communicate with the RGA directly. Instead, the PC publishes MQTT messages to a Mosquitto broker; the PLC subscribes, forwards commands to the RGA over RS-232 via the ES-246 adapter, and publishes the response back. The `mqtt_bridge` service is the glue: it exposes an HTTP API that Grafana (via the `volkovlabs-form-panel` plugin) calls, translates each request into MQTT commands, waits for the PLC response, and writes results to MySQL.
+
+```
+Grafana (port 3000)
+    │ HTTP POST (port 8080)
+    ▼
+mqtt_bridge (Docker container)
+    │ MQTT pub/sub (port 1883)
+    ▼
+Mosquitto broker (Docker container)
+    │ MQTT
+    ▼
+PLC (BRX Do-more BX-DM1E-10ER3-D)
+    │ RS-232 via ES-246 Ethernet-to-serial adapter (Raw TCP, port 9001)
+    ▼
+RGA (SRS RGA200)
+```
+
+### mqtt_bridge HTTP API
+
+The `mqtt_bridge` service is already declared in `docker-compose.yml` and starts with the rest of the stack. It listens on port `8080` and only accepts `POST` requests with a JSON body. All requests are processed sequentially — a `409` is returned if a scan is already running or a command is in flight.
+
+| Endpoint | Description | Required JSON fields |
+|---|---|---|
+| `POST /rga_p_vs_t_scan` | Pressure-vs-time scan (runs asynchronously in background) | `MR` (list of masses), `TOTALTIME` (seconds), `TIMEINTERVAL` (seconds) |
+| `POST /rga_single_mass_scan` | Single-mass ion current measurement | `MR` (integer mass) |
+| `POST /rga_analog_scan` | Full analog scan over a mass range | `INITIAL_MASS`, `FINAL_MASS`, `SCAN_RATE` (0–7), `STEPS_PER_AMU` (10–25) |
+| `POST /rga_arbitrary_command` | Send any raw RGA command | `COMMAND` (string), `LENGTH` (int), `WITH_RESULT` (0 or 1), `TIMEOUT` (float) |
+| `POST /reset` | Reset the PLC | _(empty body `{}`)_ |
+
+### MQTT topic structure
+
+All topics are prefixed with `plc`. The bridge publishes RGA command parameters as individual topics (e.g. `plc/rga/command`) and then triggers execution by publishing `1` to the action topic. The PLC publishes its response to `plc/response`.
+
+| Direction | Topic | Purpose |
+|---|---|---|
+| PC → PLC | `plc/rga/generic` | Trigger RGA command execution |
+| PC → PLC | `plc/reset` | Trigger PLC reset |
+| PC → PLC | `plc/rga/command` | RGA command string (e.g. `MR28\r`) |
+| PC → PLC | `plc/rga/length` | Expected response length in bytes |
+| PC → PLC | `plc/nocommand` | `1` = skip sending the command (read-only continuation) |
+| PLC → PC | `plc/response` | Raw response payload from the RGA |
+
+### Environment variables for `mqtt_bridge`
+
+These are set in `docker-compose.yml` under the `mqtt_bridge` service:
+
+| Variable | Default | Description |
+|---|---|---|
+| `MQTT_BROKER` | `169.254.11.119` | IP address of the Mosquitto broker (set to the host "Ethernet" IP) |
+| `MQTT_PORT` | `1883` | MQTT broker port |
+| `MYSQL_HOST` | `mysql` | MySQL container hostname |
+| `MYSQL_PORT` | `3306` | MySQL port |
+| `MYSQL_USER` | `rga_user` | MySQL user |
+| `MYSQL_PASSWORD` | `rgapw` | MySQL password |
+| `MYSQL_DB` | `rga` | MySQL database name |
