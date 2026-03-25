@@ -17,6 +17,48 @@ from rga_etl.pc_plc.http_handlers.shared import (
 )
 
 
+def _expand_commands(commands):
+    """Expand commands where length is a list into multiple sub-commands.
+
+    For a command with length=[l0, l1, ..., l_{N-1}]:
+      - First sub-command: original command with length=l0
+      - Remaining N-1 sub-commands: nocommand=1, length=l_i
+
+    Returns (expanded_commands, result_slices) where result_slices[i] = (start, end)
+    are the indices into expanded_commands that belong to original command i.
+
+    """
+    expanded = []
+    result_slices = []
+    for cmd in commands:
+        start = len(expanded)
+        lengths = cmd.get("length")
+        if isinstance(lengths, list):
+            for i, length in enumerate(lengths):
+                c = {**cmd, "length": length}
+                if i > 0:
+                    c["nocommand"] = 1
+                expanded.append(c)
+        else:
+            expanded.append(cmd)
+        result_slices.append((start, len(expanded)))
+    return expanded, result_slices
+
+
+def _reassemble_responses(raw, result_slices):
+    """Combine chunked responses back into one response per original command."""
+    responses = []
+    for start, end in result_slices:
+        if end - start == 1:
+            responses.append(raw[start])
+        else:
+            combined = []
+            for r in raw[start:end]:
+                combined.extend(r if isinstance(r, list) else [r])
+            responses.append(combined)
+    return responses
+
+
 def handle_analog_scan(req, data, publish, subscribe):
     try:
         initial_mass = int(data["INITIAL_MASS"])
@@ -79,7 +121,7 @@ def handle_analog_scan(req, data, publish, subscribe):
             "rga/command": "SC1\r",
             "nocommand": 0,
             "noresponse": 0,
-            "length": (n + 1) * 4,
+            "length": (n + 1) * [4],
             "timeout": 10.0,
         },
     ]
@@ -89,7 +131,9 @@ def handle_analog_scan(req, data, publish, subscribe):
         param_results = req._run_commands(PARAM_COMMANDS, publish, subscribe)
 
         started_at = dt.datetime.utcnow()
-        responses = req._run_commands(commands, publish, subscribe)
+        expanded_commands, result_slices = _expand_commands(commands)
+        raw_responses = req._run_commands(expanded_commands, publish, subscribe)
+        responses = _reassemble_responses(raw_responses, result_slices)
         ended_at = dt.datetime.utcnow()
         req._run_commands(END_COMMANDS, publish, subscribe)
     except TimeoutError as e:
