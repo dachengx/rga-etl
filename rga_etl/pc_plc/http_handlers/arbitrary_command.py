@@ -15,7 +15,7 @@ class ArbitraryCommandHandler:
             return
 
         try:
-            results = self.runner.run_commands(
+            results = self._run_commands(
                 [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
             )
         except TimeoutError as e:

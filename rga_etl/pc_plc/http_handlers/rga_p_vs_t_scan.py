@@ -24,16 +24,46 @@ class ScanState:
     def is_running(self):
         return self._scan_thread is not None and self._scan_thread.is_alive()
 
-    def start(self, runner, masses, total_time, time_interval):
+    def start(
+        self,
+        runner,
+        masses,
+        total_time,
+        time_interval,
+        publish_topic_prefix,
+        subscribe_topic_prefix,
+    ):
         self._stop_scan.clear()
         self._scan_thread = threading.Thread(
             target=self._scan_loop,
-            args=(runner, masses, total_time, time_interval),
+            args=(
+                runner,
+                masses,
+                total_time,
+                time_interval,
+                publish_topic_prefix,
+                subscribe_topic_prefix,
+            ),
             daemon=True,
         )
         self._scan_thread.start()
 
-    def _scan_loop(self, runner, masses, total_time, time_interval):
+    def _scan_loop(
+        self,
+        runner,
+        masses,
+        total_time,
+        time_interval,
+        publish_topic_prefix,
+        subscribe_topic_prefix,
+    ):
+        def run_commands(commands):
+            decorated = [
+                {"publish": publish_topic_prefix, "subscribe": subscribe_topic_prefix, **cmd}
+                for cmd in commands
+            ]
+            return runner.run_commands(decorated)
+
         n_cycles = int(total_time / time_interval)
         sorted_masses = sorted(masses)
         logging.info(
@@ -42,8 +72,8 @@ class ScanState:
         )
 
         try:
-            runner.run_commands(INIT_COMMANDS)
-            param_results = runner.run_commands(PARAM_COMMANDS)
+            run_commands(INIT_COMMANDS)
+            param_results = run_commands(PARAM_COMMANDS)
 
             started_at = dt.datetime.utcnow()
             scan_start = time.time()
@@ -58,7 +88,7 @@ class ScanState:
                 logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
 
                 for mass in sorted_masses:
-                    results = runner.run_commands(
+                    results = run_commands(
                         [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
                     )
                     scan_points.append(
@@ -74,7 +104,7 @@ class ScanState:
                 else:
                     self._stop_scan.wait(timeout=time_interval - elapsed)
 
-            runner.run_commands(END_COMMANDS)
+            run_commands(END_COMMANDS)
         except TimeoutError as e:
             logging.error(f"Scan aborted: {e}")
             return
@@ -136,7 +166,14 @@ class PvsTScanHandler:
             self._reject(400, str(e))
             return
 
-        self.scan_state.start(self.runner, masses, total_time, time_interval)
+        self.scan_state.start(
+            self.runner,
+            masses,
+            total_time,
+            time_interval,
+            self.publish_topic_prefix,
+            self.subscribe_topic_prefix,
+        )
 
         self._set_headers(200)
         self.wfile.write(

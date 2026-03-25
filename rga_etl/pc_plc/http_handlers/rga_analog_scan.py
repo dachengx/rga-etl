@@ -44,17 +44,17 @@ class AnalogScanHandler:
             {"main": f"NF{scan_rate}\r", "length": 128, "noresult": 1, "timeout": 1.0},
             {"main": f"SA{steps_per_amu}\r", "length": 128, "noresult": 1, "timeout": 1.0},
             {"main": "AP?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-            {"main": "SC1\r", "length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
+            {"main": "SC1\r", "length": n * 4, "noresult": 0, "timeout": 10.0},
         ]
 
         try:
-            self.runner.run_commands(INIT_COMMANDS)
-            param_results = self.runner.run_commands(PARAM_COMMANDS)
+            self._run_commands(INIT_COMMANDS)
+            param_results = self._run_commands(PARAM_COMMANDS)
 
             started_at = dt.datetime.utcnow()
-            results = self.runner.run_commands(commands)
+            results = self._run_commands(commands)
             ended_at = dt.datetime.utcnow()
-            self.runner.run_commands(END_COMMANDS)
+            self._run_commands(END_COMMANDS)
         except TimeoutError as e:
             self._reject(500, str(e))
             return

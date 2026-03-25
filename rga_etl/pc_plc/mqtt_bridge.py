@@ -47,6 +47,15 @@ class CustomHTTPRequestHandler(
     http.server.BaseHTTPRequestHandler,
 ):
     runner = runner
+    publish_topic_prefix = "generic"
+    subscribe_topic_prefix = "result"
+
+    def _run_commands(self, commands):
+        decorated = [
+            {"publish": self.publish_topic_prefix, "subscribe": self.subscribe_topic_prefix, **cmd}
+            for cmd in commands
+        ]
+        return self.runner.run_commands(decorated)
 
     _ROUTES = {
         "/p_vs_t_scan": "_handle_p_vs_t_scan",
