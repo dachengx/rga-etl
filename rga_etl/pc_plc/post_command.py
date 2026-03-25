@@ -40,32 +40,32 @@ _HANDLERS = {
     # MR{mass}: single-mass ion current, 4-byte little-endian signed int (0.1 fA)
     # Mirrors: Scans.get_single_mass_scan() -> comm._read_binary(4) -> convert_to_long
     "MR": Scans.convert_to_long,
-    # TP?: total pressure ion current, 4-byte little-endian signed int (0.1 fA)
-    # Mirrors: RgaTotalPressureCommand.__get__() -> comm._read_long()
-    "TP": Scans.convert_to_long,
     # SC1: analog scan, (n+1) * 4 bytes; last 4 bytes are total current
     "SC": _handle_sc,
+    # TP?: total pressure ion current, 4-byte little-endian signed int (0.1 fA)
+    # Mirrors: RgaTotalPressureCommand.__get__() -> comm._read_long()
+    "TP?": Scans.convert_to_long,
     # AP?: number of data points expected in next analog scan (ASCII int)
     # Mirrors: Scans.total_points_analog = IntGetCommand('AP')
-    "AP": _ascii_int,
+    "AP?": _ascii_int,
     # EE?: electron energy in eV (ASCII int, range 25-105)
     # Mirrors: Ionizer.electron_energy = RgaIntCommand('EE')
-    "EE": _ascii_int,
+    "EE?": _ascii_int,
     # VF?: focus plate voltage in V (ASCII int, range 0-150)
     # Mirrors: Ionizer.focus_voltage = RgaIntCommand('VF')
-    "VF": _ascii_int,
+    "VF?": _ascii_int,
     # FL?: filament emission current in mA (ASCII float, range 0.0-3.5)
     # Mirrors: Ionizer.emission_current = RgaFloatCommand('FL')
-    "FL": _ascii_float,
+    "FL?": _ascii_float,
     # SP?: partial pressure sensitivity in mA/Torr (ASCII float)
     # Mirrors: Pressure.partial_pressure_sensitivity = FloatNSCommand('SP')
-    "SP": _ascii_float,
+    "SP?": _ascii_float,
     # ST?: total pressure sensitivity in mA/Torr (ASCII float)
     # Mirrors: Pressure.total_pressure_sensitivity = FloatNSCommand('ST')
-    "ST": _ascii_float,
+    "ST?": _ascii_float,
     # IE?: ion energy; returns 0 (8 eV) or 1 (12 eV), converted to actual eV
     # Mirrors: Ionizer.ion_energy = RgaIonEnergyCommand('IE')
-    "IE": _handle_ie,
+    "IE?": _handle_ie,
 }
 
 
@@ -76,7 +76,7 @@ def process(command, payload):
     no handler matches.
 
     """
-    main = command.get("main", "")
+    main = command.get("rga/main", "")
     for prefix, handler in _HANDLERS.items():
         if main.startswith(prefix):
             return handler(payload)

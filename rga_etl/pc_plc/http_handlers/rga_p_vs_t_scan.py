@@ -89,7 +89,14 @@ class ScanState:
 
                 for mass in sorted_masses:
                     results = run_commands(
-                        [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}]
+                        [
+                            {
+                                "rga/main": f"MR{mass}\r",
+                                "rga/length": 4,
+                                "noresult": 0,
+                                "timeout": 1.0,
+                            }
+                        ]
                     )
                     scan_points.append(
                         PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0])

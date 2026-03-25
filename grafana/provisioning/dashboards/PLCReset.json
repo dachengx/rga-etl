@@ -56,7 +56,23 @@
           "title": "Confirm PLC Reset"
         },
         "elementValueChanged": "",
-        "elements": [],
+        "elements": [
+          {
+            "id": "WHETHER_RESET",
+            "labelWidth": 20,
+            "options": [
+              {"id": "0", "label": "No",  "type": "number", "value": 0},
+              {"id": "1", "label": "Yes", "type": "number", "value": 1}
+            ],
+            "optionsSource": "Custom",
+            "section": "",
+            "title": "Whether Reset",
+            "tooltip": "Select Yes to confirm PLC reset",
+            "type": "select",
+            "uid": "plcreset-whether-0001",
+            "value": 0
+          }
+        ],
         "initial": {
           "code": "context.panel.enableSubmit();",
           "contentType": "application/json",

@@ -38,12 +38,12 @@ def handle_analog_scan(req, data, publish, subscribe):
     n = (final_mass - initial_mass) * steps_per_amu + 1
     logging.info(f"Analog scan: n={n} data points")
     commands = [
-        {"main": f"MI{initial_mass}\r", "length": 128, "noresult": 1, "timeout": 1.0},
-        {"main": f"MF{final_mass}\r", "length": 128, "noresult": 1, "timeout": 1.0},
-        {"main": f"NF{scan_rate}\r", "length": 128, "noresult": 1, "timeout": 1.0},
-        {"main": f"SA{steps_per_amu}\r", "length": 128, "noresult": 1, "timeout": 1.0},
-        {"main": "AP?\r", "length": 128, "noresult": 0, "timeout": 1.0},
-        {"main": "SC1\r", "length": n * 4, "noresult": 0, "timeout": 10.0},
+        {"rga/main": f"MI{initial_mass}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
+        {"rga/main": f"MF{final_mass}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
+        {"rga/main": f"NF{scan_rate}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
+        {"rga/main": f"SA{steps_per_amu}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
+        {"rga/main": "AP?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
+        {"rga/main": "SC1\r", "rga/length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
     ]
 
     try:

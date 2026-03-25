@@ -13,7 +13,7 @@ def handle_single_mass_scan(req, data, publish, subscribe):
     try:
         req._run_commands(INIT_COMMANDS, publish, subscribe)
         results = req._run_commands(
-            [{"main": f"MR{mass}\r", "length": 4, "noresult": 0, "timeout": 1.0}],
+            [{"rga/main": f"MR{mass}\r", "rga/length": 4, "noresult": 0, "timeout": 1.0}],
             publish,
             subscribe,
         )

@@ -14,15 +14,11 @@ class MQTTCommandRunner:
         broker,
         port,
         topic_prefix,
-        publish_topic_suffix="generic",
-        subscribe_topic_suffix="result",
         sleep_between_commands=0.0,
     ):
         self.broker = broker
         self.port = port
         self.topic_prefix = topic_prefix
-        self.publish_topic = f"{topic_prefix}/{publish_topic_suffix}"
-        self.subscribe_topic = f"{topic_prefix}/{subscribe_topic_suffix}"
         self.sleep_between_commands = sleep_between_commands
 
         self.client = mqtt.Client()
@@ -47,8 +43,6 @@ class MQTTCommandRunner:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logging.info(f"Connected to MQTT broker at {self.broker}:{self.port}")
-            client.subscribe(self.subscribe_topic)
-            logging.info(f"Subscribed to {self.subscribe_topic}")
         else:
             logging.error(f"MQTT connect failed with rc={rc}")
 
@@ -95,6 +89,13 @@ class MQTTCommandRunner:
         except Exception as e:
             logging.error(f"Failed to publish to {topic}: {e}")
 
+    def subscribe(self, topic):
+        try:
+            self.client.subscribe(topic)
+            logging.info(f"Subscribed to {topic}")
+        except Exception as e:
+            logging.error(f"Failed to subscribe to {topic}: {e}")
+
     # -------------------------
     # Public API
     # -------------------------
@@ -123,30 +124,27 @@ class MQTTCommandRunner:
 
             logging.info(f"Sending command: {command}")
 
-            publish_topic = f"{self.topic_prefix}/{command['publish']}"
-            result_topic = f"{self.topic_prefix}/{command['subscribe']}"
-
             # trigger/send command group
             for key, value in command.items():
-                if key in ("timeout", "publish", "subscribe"):
+                if key == "timeout":
                     continue
                 topic = f"{self.topic_prefix}/{key}"
                 self.publish(topic, value)
+
+            publish_topic = f"{self.topic_prefix}/{command['publish']}"
+            subscribe_topic = f"{self.topic_prefix}/{command['subscribe']}"
+
             # must inform the subscriber to start executing the command after all parameters are set
             self.publish(publish_topic, 1)
 
             # wait only if result is expected
             if command.get("noresult", 0) == 0:
-                if result_topic != self.subscribe_topic:
-                    self.client.subscribe(result_topic)
+                self.subscribe(subscribe_topic)
 
                 self.current_wait_event = threading.Event()
 
                 logging.info("Waiting for result...")
                 ok = self.current_wait_event.wait(timeout=command["timeout"])
-
-                if result_topic != self.subscribe_topic:
-                    self.client.unsubscribe(result_topic)
 
                 if ok:
                     logging.info(f"Command finished with result: {self.current_result}")

@@ -15,7 +15,7 @@ def handle_arbitrary_command(req, data, publish, subscribe):
 
     try:
         results = req._run_commands(
-            [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}],
+            [{"rga/main": command, "rga/length": length, "noresult": noresult, "timeout": timeout}],
             publish,
             subscribe,
         )
