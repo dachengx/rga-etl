@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from rga_etl.databases.utils import init_session, init_instrument
 from rga_etl.databases.mysql import Execution, PvsTScan, PvsTScanPoint
 from rga_etl.pc_plc.http_handlers.shared import (
+    DEFAULT_TIMEOUT,
     INIT_COMMANDS,
     END_COMMANDS,
     PARAM_COMMANDS,
@@ -88,18 +89,18 @@ class ScanState:
                 logging.info(f"Cycle {i + 1}/{n_cycles} — measuring masses {sorted_masses}")
 
                 for mass in sorted_masses:
-                    results = run_commands(
+                    responses = run_commands(
                         [
                             {
-                                "rga/main": f"MR{mass}\r",
-                                "rga/length": 4,
-                                "noresult": 0,
-                                "timeout": 1.0,
+                                "rga/command": f"MR{mass}\r",
+                                "length": 4,
+                                "noresponse": 0,
+                                "timeout": DEFAULT_TIMEOUT,
                             }
                         ]
                     )
                     scan_points.append(
-                        PvsTScanPoint(mass=mass, time=cycle_time, intensity=results[0])
+                        PvsTScanPoint(mass=mass, time=cycle_time, intensity=responses[0])
                     )
 
                 elapsed = time.time() - cycle_start

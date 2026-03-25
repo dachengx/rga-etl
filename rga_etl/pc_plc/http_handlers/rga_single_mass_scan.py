@@ -1,6 +1,6 @@
 import json
 
-from rga_etl.pc_plc.http_handlers.shared import INIT_COMMANDS, END_COMMANDS
+from rga_etl.pc_plc.http_handlers.shared import DEFAULT_TIMEOUT, INIT_COMMANDS, END_COMMANDS
 
 
 def handle_single_mass_scan(req, data, publish, subscribe):
@@ -12,8 +12,15 @@ def handle_single_mass_scan(req, data, publish, subscribe):
 
     try:
         req._run_commands(INIT_COMMANDS, publish, subscribe)
-        results = req._run_commands(
-            [{"rga/main": f"MR{mass}\r", "rga/length": 4, "noresult": 0, "timeout": 1.0}],
+        responses = req._run_commands(
+            [
+                {
+                    "rga/command": f"MR{mass}\r",
+                    "length": 4,
+                    "noresponse": 0,
+                    "timeout": DEFAULT_TIMEOUT,
+                }
+            ],
             publish,
             subscribe,
         )
@@ -23,4 +30,4 @@ def handle_single_mass_scan(req, data, publish, subscribe):
         return
 
     req._set_headers(200)
-    req.wfile.write(json.dumps({"status": "ok", "mass": mass, "intensity": results[0]}).encode())
+    req.wfile.write(json.dumps({"status": "ok", "mass": mass, "intensity": responses[0]}).encode())

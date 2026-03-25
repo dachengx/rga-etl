@@ -47,27 +47,27 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         "/rga_p_vs_t_scan": {
             "handler": handle_p_vs_t_scan,
             "publish": "rga/generic",
-            "subscribe": "result",
+            "subscribe": "response",
         },
         "/rga_single_mass_scan": {
             "handler": handle_single_mass_scan,
             "publish": "rga/generic",
-            "subscribe": "result",
+            "subscribe": "response",
         },
         "/rga_analog_scan": {
             "handler": handle_analog_scan,
             "publish": "rga/generic",
-            "subscribe": "result",
+            "subscribe": "response",
         },
         "/rga_arbitrary_command": {
             "handler": handle_arbitrary_command,
             "publish": "rga/generic",
-            "subscribe": "result",
+            "subscribe": "response",
         },
         "/reset": {
             "handler": handle_reset,
             "publish": "reset",
-            "subscribe": "result",
+            "subscribe": "response",
         },
     }
 

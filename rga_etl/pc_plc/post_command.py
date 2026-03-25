@@ -1,4 +1,4 @@
-# Post-command result processors for RGA MQTT responses.
+# Post-command response processors for RGA MQTT responses.
 # Source reference for command semantics:
 # https://github.com/thinkSRS/srsinst.rga/blob/main/srsinst/rga/instruments/rga100/components.py
 # https://github.com/thinkSRS/srsinst.rga/blob/main/srsinst/rga/instruments/rga100/scans.py
@@ -70,13 +70,13 @@ _HANDLERS = {
 
 
 def process(command, payload):
-    """Apply post-command processing to a raw MQTT result payload.
+    """Apply post-command processing to a raw MQTT response payload.
 
     Looks up the command's 'main' field against registered prefixes. Falls back to UTF-8 decode if
     no handler matches.
 
     """
-    main = command.get("rga/main", "")
+    main = command.get("rga/command", "")
     for prefix, handler in _HANDLERS.items():
         if main.startswith(prefix):
             return handler(payload)

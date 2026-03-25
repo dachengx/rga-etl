@@ -8,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from rga_etl.databases.utils import init_session, init_instrument
 from rga_etl.databases.mysql import Execution, AnalogScan, AnalogScanPoint
 from rga_etl.pc_plc.http_handlers.shared import (
+    DEFAULT_RESPONSE_LENGTH,
+    DEFAULT_TIMEOUT,
     INIT_COMMANDS,
     END_COMMANDS,
     PARAM_COMMANDS,
@@ -38,12 +40,37 @@ def handle_analog_scan(req, data, publish, subscribe):
     n = (final_mass - initial_mass) * steps_per_amu + 1
     logging.info(f"Analog scan: n={n} data points")
     commands = [
-        {"rga/main": f"MI{initial_mass}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
-        {"rga/main": f"MF{final_mass}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
-        {"rga/main": f"NF{scan_rate}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
-        {"rga/main": f"SA{steps_per_amu}\r", "rga/length": 128, "noresult": 1, "timeout": 1.0},
-        {"rga/main": "AP?\r", "rga/length": 128, "noresult": 0, "timeout": 1.0},
-        {"rga/main": "SC1\r", "rga/length": (n + 1) * 4, "noresult": 0, "timeout": 10.0},
+        {
+            "rga/command": f"MI{initial_mass}\r",
+            "length": DEFAULT_RESPONSE_LENGTH,
+            "noresponse": 1,
+            "timeout": DEFAULT_TIMEOUT,
+        },
+        {
+            "rga/command": f"MF{final_mass}\r",
+            "length": DEFAULT_RESPONSE_LENGTH,
+            "noresponse": 1,
+            "timeout": DEFAULT_TIMEOUT,
+        },
+        {
+            "rga/command": f"NF{scan_rate}\r",
+            "length": DEFAULT_RESPONSE_LENGTH,
+            "noresponse": 1,
+            "timeout": DEFAULT_TIMEOUT,
+        },
+        {
+            "rga/command": f"SA{steps_per_amu}\r",
+            "length": DEFAULT_RESPONSE_LENGTH,
+            "noresponse": 1,
+            "timeout": DEFAULT_TIMEOUT,
+        },
+        {
+            "rga/command": "AP?\r",
+            "length": DEFAULT_RESPONSE_LENGTH,
+            "noresponse": 0,
+            "timeout": DEFAULT_TIMEOUT,
+        },
+        {"rga/command": "SC1\r", "length": (n + 1) * 4, "noresponse": 0, "timeout": 10.0},
     ]
 
     try:
@@ -51,27 +78,27 @@ def handle_analog_scan(req, data, publish, subscribe):
         param_results = req._run_commands(PARAM_COMMANDS, publish, subscribe)
 
         started_at = dt.datetime.utcnow()
-        results = req._run_commands(commands, publish, subscribe)
+        responses = req._run_commands(commands, publish, subscribe)
         ended_at = dt.datetime.utcnow()
         req._run_commands(END_COMMANDS, publish, subscribe)
     except TimeoutError as e:
         req._reject(500, str(e))
         return
 
-    # results[4] = AP? (expected number of data points)
-    # results[5] = SC1 (intensities, last element is total pressure)
-    ap_n = results[4]
+    # responses[4] = AP? (expected number of data points)
+    # responses[5] = SC1 (intensities, last element is total pressure)
+    ap_n = responses[4]
     if ap_n != n:
         req._reject(500, f"AP? returned {ap_n} data points, expected {n}")
         return
 
-    sc_len = len(results[5])
+    sc_len = len(responses[5])
     if sc_len != n + 1:
         req._reject(500, f"SC1 returned {sc_len} values, expected {n + 1}")
         return
 
-    intensities = results[5][:-1]
-    total_pressure = results[5][-1]
+    intensities = responses[5][:-1]
+    total_pressure = responses[5][-1]
     step = 1.0 / steps_per_amu
     # Mirrors: Scans.get_mass_axis() in srsinst.rga, which also uses np.arange.
     mass_axis = np.arange(initial_mass, final_mass + step / 2.0, step)

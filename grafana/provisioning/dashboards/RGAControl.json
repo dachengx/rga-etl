@@ -517,12 +517,12 @@
             "id": "LENGTH",
             "labelWidth": 20,
             "section": "",
-            "title": "Result Length",
+            "title": "Response Length",
             "tooltip": "Expected response length in bytes",
             "type": "number",
             "uid": "a1b2c3d4-0000-0000-0000-000000000007",
             "unit": "bytes",
-            "value": 128,
+            "value": 64,
             "width": 50
           },
           {
@@ -535,7 +535,7 @@
             ],
             "optionsSource": "Custom",
             "section": "",
-            "title": "With Result",
+            "title": "With Response",
             "tooltip": "Whether to wait for a result from the PLC",
             "type": "select",
             "uid": "a1b2c3d4-0000-0000-0000-000000000008",
