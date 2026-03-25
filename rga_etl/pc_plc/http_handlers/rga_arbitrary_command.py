@@ -5,7 +5,7 @@ def handle_arbitrary_command(req, data, publish, subscribe):
     try:
         command = str(data["COMMAND"])
         length = int(data["LENGTH"])
-        noresult = 1 - int(data["WITH_RESULT"])  # WITH_RESULT=1 (Yes) → noresult=0
+        noresponse = 1 - int(data["WITH_RESULT"])  # WITH_RESULT=1 (Yes) → noresponse=0
         timeout = float(data["TIMEOUT"])
         if not command.endswith("\r"):
             command += "\r"
@@ -14,8 +14,16 @@ def handle_arbitrary_command(req, data, publish, subscribe):
         return
 
     try:
-        results = req._run_commands(
-            [{"rga/main": command, "rga/length": length, "noresult": noresult, "timeout": timeout}],
+        responses = req._run_commands(
+            [
+                {
+                    "rga/command": command,
+                    "nocommand": 0,
+                    "noresponse": noresponse,
+                    "length": length,
+                    "timeout": timeout,
+                }
+            ],
             publish,
             subscribe,
         )
@@ -24,4 +32,6 @@ def handle_arbitrary_command(req, data, publish, subscribe):
         return
 
     req._set_headers(200)
-    req.wfile.write(json.dumps({"status": "ok", "command": command, "result": results[0]}).encode())
+    req.wfile.write(
+        json.dumps({"status": "ok", "command": command, "response": responses[0]}).encode()
+    )

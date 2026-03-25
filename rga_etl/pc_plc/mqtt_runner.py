@@ -51,10 +51,10 @@ class MQTTCommandRunner:
             logging.warning(f"Unexpected message on {msg.topic} — no command in progress, ignoring")
             return
         try:
-            result = post_process(self.current_command, msg.payload)
-            logging.info(f"Received on {msg.topic}: {result}")
+            response = post_process(self.current_command, msg.payload)
+            logging.info(f"Received on {msg.topic}: {response}")
 
-            self.current_result = result
+            self.current_result = response
 
             if self.current_wait_event is not None:
                 self.current_wait_event.set()
@@ -100,15 +100,15 @@ class MQTTCommandRunner:
     # Public API
     # -------------------------
     def run_commands(self, commands):
-        results = []
+        responses = []
         for command in commands:
             self.command_queue.put(command)
             self.command_queue.join()
-            result = self.current_result
-            if isinstance(result, Exception):
-                raise result
-            results.append(result if command.get("noresult", 0) == 0 else None)
-        return results
+            response = self.current_result
+            if isinstance(response, Exception):
+                raise response
+            responses.append(response if command.get("noresponse", 0) == 0 else None)
+        return responses
 
     # -------------------------
     # Internal worker
@@ -137,25 +137,25 @@ class MQTTCommandRunner:
             # must inform the subscriber to start executing the command after all parameters are set
             self.publish(publish_topic, 1)
 
-            # wait only if result is expected
-            if command.get("noresult", 0) == 0:
+            # wait only if response is expected
+            if command.get("noresponse", 0) == 0:
                 self.subscribe(subscribe_topic)
 
                 self.current_wait_event = threading.Event()
 
-                logging.info("Waiting for result...")
+                logging.info("Waiting for response...")
                 ok = self.current_wait_event.wait(timeout=command["timeout"])
 
                 if ok:
-                    logging.info(f"Command finished with result: {self.current_result}")
+                    logging.info(f"Command finished with response: {self.current_result}")
                 else:
                     self.current_result = TimeoutError(
-                        f"Timeout waiting for result for command: {command}"
+                        f"Timeout waiting for response for command: {command}"
                     )
 
                 self.current_wait_event = None
             else:
-                logging.info("Command does not require result, continuing immediately")
+                logging.info("Command does not require response, continuing immediately")
 
             self.command_queue.task_done()
             self.current_command = None
