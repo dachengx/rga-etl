@@ -8,9 +8,9 @@ import socketserver
 import logging
 
 from rga_etl.pc_plc.mqtt_runner import MQTTCommandRunner
-from rga_etl.pc_plc.http_handlers.pvs_t_scan import PvsTScanHandler, scan_state
-from rga_etl.pc_plc.http_handlers.single_mass_scan import SingleMassScanHandler
-from rga_etl.pc_plc.http_handlers.analog_scan import AnalogScanHandler
+from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import PvsTScanHandler, scan_state
+from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import SingleMassScanHandler
+from rga_etl.pc_plc.http_handlers.rga_analog_scan import AnalogScanHandler
 from rga_etl.pc_plc.http_handlers.arbitrary_command import ArbitraryCommandHandler
 
 # -------------------------
@@ -26,6 +26,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(message)s",
 )
+logging.getLogger("mysql.connector").setLevel(logging.WARNING)
 
 runner = MQTTCommandRunner(
     broker=MQTT_BROKER,
@@ -48,7 +49,7 @@ class CustomHTTPRequestHandler(
     runner = runner
 
     _ROUTES = {
-        "/p_vs_t_scan": "_handle_pvs_t_scan",
+        "/p_vs_t_scan": "_handle_p_vs_t_scan",
         "/single_mass_scan": "_handle_single_mass_scan",
         "/analog_scan": "_handle_analog_scan",
         "/arbitrary_command": "_handle_arbitrary_command",
@@ -81,15 +82,11 @@ class CustomHTTPRequestHandler(
             raw_body = self.rfile.read(length)
             if not raw_body:
                 raise ValueError("Empty request body")
-            data = json.loads(raw_body.decode("utf-8", errors="ignore"))
+            data = json.loads(raw_body.decode("utf-8"))
             if not isinstance(data, dict):
                 raise ValueError("JSON must be an object")
         except Exception as e:
-            logging.warning(f"Invalid JSON: {e}")
-            self._set_headers(400)
-            self.wfile.write(
-                json.dumps({"status": "error", "message": f"Invalid JSON: {e}"}).encode()
-            )
+            self._reject(400, f"Invalid JSON: {e}")
             return
 
         busy_reason = (
@@ -98,26 +95,17 @@ class CustomHTTPRequestHandler(
             else "Runner busy" if runner.is_busy() else None
         )
         if busy_reason:
-            logging.error(f"{busy_reason} — rejecting new command.")
-            self._set_headers(409)
-            self.wfile.write(
-                json.dumps(
-                    {"status": "error", "message": f"{busy_reason}. Wait for it to finish."}
-                ).encode()
-            )
+            self._reject(409, f"{busy_reason}. Wait for it to finish.")
             return
 
         handler = getattr(self, self._ROUTES.get(self.path, ""), None)
         if handler:
-            handler(data)
+            try:
+                handler(data)
+            except TimeoutError as e:
+                self._reject(500, str(e))
         else:
-            logging.warning(f"Unknown endpoint: {self.path}")
-            self._set_headers(404)
-            self.wfile.write(
-                json.dumps(
-                    {"status": "error", "message": f"Unknown endpoint: {self.path}"}
-                ).encode()
-            )
+            self._reject(404, f"Unknown endpoint: {self.path}")
 
 
 # -------------------------
@@ -134,9 +122,6 @@ def main():
     def stop_server(signum, frame):
         logging.info("Ctrl+C detected — shutting down...")
         threading.Thread(target=server.shutdown).start()
-        scan_state.stop()
-        runner.disconnect()
-        logging.info("Runner stopped.")
 
     signal.signal(signal.SIGINT, stop_server)
 
@@ -147,6 +132,9 @@ def main():
         server.serve_forever()
         logging.info("HTTP server stopped.")
     finally:
+        scan_state.stop()
+        runner.disconnect()
+        logging.info("Runner stopped.")
         logging.info("Closing listening socket...")
         server.server_close()
         logging.info("Socket closed.")

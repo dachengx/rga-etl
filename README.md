@@ -2,7 +2,7 @@
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/dachengx/rga-etl/main.svg)](https://results.pre-commit.ci/latest/github/dachengx/rga-etl/main)
 
-Extract, transform, and load the data from an [https://www.thinksrs.com/products/rga.htm](SRS RGA200) to a MySQL database. Residual Gas Analyzer (RGA) is a mass spectrometer to measure the residual gas pressure in vacuum systems.
+Extract, transform, and load the data from an [SRS RGA200](https://www.thinksrs.com/products/rga.htm) to a MySQL database. Residual Gas Analyzer (RGA) is a mass spectrometer to measure the residual gas pressure in vacuum systems.
 
 There is a huge caveat about serial communication settings of the RGA-200. Although the [SRS RGA manual](https://thinksrs.com/downloads/pdfs/manuals/RGAm.pdf) says that the number of stop bit of the RS-232 is 2, it actually should be 1. So in the settings of adpaters and programmable logic controller (PLC), be aware of this.
 
@@ -41,11 +41,11 @@ To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`.
 To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
 1. The protocol type should be Telnet. After the adapter connects to the PC by Ethernet cable, the RGA is equivalently connected to a new serial port. This mode needs a [Windows installed software](https://www.brainboxes.com/faq/where-can-i-find-the-windows-drivers-for-my-ethernet-to-serial). The software installs the adapter's driver each time it connects to the PC.
-2. The protocol type should be Raw TCP. After the adapter connects to the PC or PLC by Ethernet cable, set the protocol type by via (http://192.168.127.254/serialport1.html)[http://192.168.127.254/serialport1.html]. Then send and receive data via TCP sockets.
+2. The protocol type should be Raw TCP. After the adapter connects to the PC or PLC by Ethernet cable, set the protocol type by via [http://192.168.127.254/serialport1.html](http://192.168.127.254/serialport1.html). Then send and receive data via TCP sockets.
 
 ## srsinst.rga
 
-The repo is based on the python wrapped interface for RGA communication. The RGA controlled directly by PC is built on top of it. It is also a good reference of data handling even for PC-PLC setup. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga).
+The repo is based on the python wrapped interface for RGA communication. The RGA controlled directly by PC is built on top of it. It is also a good reference of data handling even for PC-PLC setup. Reference: [srsinst.rga](https://github.com/thinkSRS/srsinst.rga) (commit `d02992b68e527aabeea0a8e2f5486bdc4589f438`).
 
 ## RGA Operation Controlled Directly from PC
 

@@ -6,7 +6,7 @@ class ArbitraryCommandHandler:
         try:
             command = str(data["COMMAND"])
             length = int(data["LENGTH"])
-            noresult = int(data["WITH_RESULT"])
+            noresult = 1 - int(data["WITH_RESULT"])  # WITH_RESULT=1 (Yes) → noresult=0
             timeout = float(data["TIMEOUT"])
             if not command.endswith("\r"):
                 command += "\r"
@@ -14,16 +14,15 @@ class ArbitraryCommandHandler:
             self._reject(400, str(e))
             return
 
-        self.runner.submit_commands(
-            [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
-        )
+        try:
+            results = self.runner.run_commands(
+                [{"main": command, "length": length, "noresult": noresult, "timeout": timeout}]
+            )
+        except TimeoutError as e:
+            self._reject(500, str(e))
+            return
 
         self._set_headers(200)
         self.wfile.write(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "message": f"Command sent: {command!r}",
-                }
-            ).encode()
+            json.dumps({"status": "ok", "command": command, "result": results[0]}).encode()
         )

@@ -53,8 +53,11 @@ class MQTTCommandRunner:
             logging.error(f"MQTT connect failed with rc={rc}")
 
     def on_message(self, client, userdata, msg):
+        if self.current_command is None:
+            logging.warning(f"Unexpected message on {msg.topic} — no command in progress, ignoring")
+            return
         try:
-            result = post_process(self.current_command or {}, msg.payload)
+            result = post_process(self.current_command, msg.payload)
             logging.info(f"Received on {msg.topic}: {result}")
 
             self.current_result = result
@@ -95,9 +98,16 @@ class MQTTCommandRunner:
     # -------------------------
     # Public API
     # -------------------------
-    def submit_commands(self, commands):
+    def run_commands(self, commands):
+        results = []
         for command in commands:
             self.command_queue.put(command)
+            self.command_queue.join()
+            result = self.current_result
+            if isinstance(result, Exception):
+                raise result
+            results.append(result if command.get("noresult", 0) == 0 else None)
+        return results
 
     # -------------------------
     # Internal worker
@@ -132,7 +142,9 @@ class MQTTCommandRunner:
                 if ok:
                     logging.info(f"Command finished with result: {self.current_result}")
                 else:
-                    logging.warning(f"Timeout waiting for result for command: {command}")
+                    self.current_result = TimeoutError(
+                        f"Timeout waiting for result for command: {command}"
+                    )
 
                 self.current_wait_event = None
             else:
