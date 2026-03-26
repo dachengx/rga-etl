@@ -68,6 +68,7 @@ def handle_analog_scan(req, data, publish, subscribe):
         final_mass = int(data["FINAL_MASS"])
         scan_rate = int(data["SCAN_RATE"])
         steps_per_amu = int(data["STEPS_PER_AMU"])
+        sc_timeout = float(data.get("TIMEOUT", 1.0))
         if not (1 <= initial_mass < final_mass):
             raise ValueError(
                 "INITIAL_MASS must be < FINAL_MASS and >= 1 "
@@ -77,6 +78,8 @@ def handle_analog_scan(req, data, publish, subscribe):
             raise ValueError(f"SCAN_RATE must be between 0 and 7 (got {scan_rate})")
         if not (10 <= steps_per_amu <= 25):
             raise ValueError(f"STEPS_PER_AMU must be between 10 and 25 (got {steps_per_amu})")
+        if sc_timeout <= 0:
+            raise ValueError(f"TIMEOUT must be positive (got {sc_timeout})")
     except (KeyError, ValueError) as e:
         req._reject(400, str(e))
         return
@@ -133,7 +136,7 @@ def handle_analog_scan(req, data, publish, subscribe):
             "nocommand": 0,
             "noresponse": 0,
             "length": sc_lengths,
-            "timeout": 10.0,
+            "timeout": sc_timeout,
         },
     ]
 

@@ -95,7 +95,7 @@ PARAM_COMMANDS = [
         "nocommand": 0,
         "noresponse": 0,
         "length": 4,
-        "timeout": DEFAULT_TIMEOUT,
+        "timeout": 10.0,
     },
 ]
 
