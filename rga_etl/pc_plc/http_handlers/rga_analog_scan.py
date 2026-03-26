@@ -38,6 +38,9 @@ def _expand_commands(commands):
                 c = {**cmd, "length": length}
                 if i > 0:
                     c["nocommand"] = 1
+                if i > 1 and i != len(lengths) - 1:
+                    # params identical to chunk 1; PLC retains them — only send trigger
+                    c["_skip_params"] = True
                 expanded.append(c)
         else:
             expanded.append(cmd)
@@ -65,6 +68,7 @@ def handle_analog_scan(req, data, publish, subscribe):
         final_mass = int(data["FINAL_MASS"])
         scan_rate = int(data["SCAN_RATE"])
         steps_per_amu = int(data["STEPS_PER_AMU"])
+        sc_timeout = float(data.get("TIMEOUT", 1.0))
         if not (1 <= initial_mass < final_mass):
             raise ValueError(
                 "INITIAL_MASS must be < FINAL_MASS and >= 1 "
@@ -74,6 +78,8 @@ def handle_analog_scan(req, data, publish, subscribe):
             raise ValueError(f"SCAN_RATE must be between 0 and 7 (got {scan_rate})")
         if not (10 <= steps_per_amu <= 25):
             raise ValueError(f"STEPS_PER_AMU must be between 10 and 25 (got {steps_per_amu})")
+        if sc_timeout <= 0:
+            raise ValueError(f"TIMEOUT must be positive (got {sc_timeout})")
     except (KeyError, ValueError) as e:
         req._reject(400, str(e))
         return
@@ -81,6 +87,14 @@ def handle_analog_scan(req, data, publish, subscribe):
     # There is a last byte in the response of SC command that indicates the total pressure
     n = (final_mass - initial_mass) * steps_per_amu + 1
     logging.info(f"Analog scan: n={n} data points")
+    total_bytes = (n + 1) * 4
+    sc_lengths = [DEFAULT_RESPONSE_LENGTH] * (total_bytes // DEFAULT_RESPONSE_LENGTH)
+    if total_bytes % DEFAULT_RESPONSE_LENGTH:
+        sc_lengths.append(total_bytes % DEFAULT_RESPONSE_LENGTH)
+    logging.info(
+        f"SC1 split into {len(sc_lengths)} chunks ({sc_lengths}) "
+        f"of up to {DEFAULT_RESPONSE_LENGTH} bytes"
+    )
     commands = [
         {
             "rga/command": f"MI{initial_mass}\r",
@@ -121,8 +135,8 @@ def handle_analog_scan(req, data, publish, subscribe):
             "rga/command": "SC1\r",
             "nocommand": 0,
             "noresponse": 0,
-            "length": (n + 1) * [4],
-            "timeout": 10.0,
+            "length": sc_lengths,
+            "timeout": sc_timeout,
         },
     ]
 

@@ -53,14 +53,13 @@ class MQTTCommandRunner:
         try:
             response = post_process(self.current_command, msg.payload)
             logging.info(f"Received on {msg.topic}: {response}")
-
             self.current_result = response
-
-            if self.current_wait_event is not None:
-                self.current_wait_event.set()
-
         except Exception as e:
             logging.error(f"Failed to process message from {msg.topic}: {e}")
+            self.current_result = e
+        finally:
+            if self.current_wait_event is not None:
+                self.current_wait_event.set()
 
     # -------------------------
     # Basic MQTT operations
@@ -124,25 +123,32 @@ class MQTTCommandRunner:
 
             logging.info(f"Sending command: {command}")
 
-            # trigger/send command group
-            for key, value in command.items():
-                if key == "timeout":
-                    continue
-                topic = f"{self.topic_prefix}/{key}"
-                self.publish(topic, value)
-
             publish_topic = f"{self.topic_prefix}/{command['publish']}"
             subscribe_topic = f"{self.topic_prefix}/{command['subscribe']}"
+
+            # Subscribe and arm the wait event BEFORE publishing the trigger so that
+            # a fast PLC response (e.g. serial data already buffered) cannot arrive
+            # between the trigger publish and the event creation and be silently lost.
+            if command.get("noresponse", 0) == 0:
+                self.subscribe(subscribe_topic)
+                self.current_wait_event = threading.Event()
+
+            # publish parameters, then trigger execution.
+            # Keys used only for Python-side routing are excluded from MQTT.
+            # Commands marked with _skip_params only send the trigger — the PLC
+            # retains parameter values from the previous identical sub-command.
+            _ROUTING_KEYS = {"timeout", "publish", "subscribe"}
+            if not command.get("_skip_params", False):
+                for key, value in command.items():
+                    if key in _ROUTING_KEYS or key.startswith("_"):
+                        continue
+                    topic = f"{self.topic_prefix}/{key}"
+                    self.publish(topic, value)
 
             # must inform the subscriber to start executing the command after all parameters are set
             self.publish(publish_topic, 1)
 
-            # wait only if response is expected
             if command.get("noresponse", 0) == 0:
-                self.subscribe(subscribe_topic)
-
-                self.current_wait_event = threading.Event()
-
                 logging.info("Waiting for response...")
                 ok = self.current_wait_event.wait(timeout=command["timeout"])
 
