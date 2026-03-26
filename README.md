@@ -34,13 +34,13 @@ in `cmd`.
 Test mosquito sub/pub model
 
 ```
-docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_sub -h mosquitto -p 1883 -t brx/control/do -v
-docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_pub -h mosquitto -p 1883 -t brx/control/do -m 1
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_sub -h mosquitto -p 1883 -t brx/plc/do -v
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_pub -h mosquitto -p 1883 -t brx/plc/do -m 1
 ```
 
 To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, visit `http://localhost:8090/` with `"server"` set to `mysql`.
 
-To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`.
+To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`. To restart `mqtt_bridge`, run `docker compose -f "$HOME\rga-etl\docker-compose.yml" build --no-cache mqtt_bridge`.
 
 To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 

@@ -522,7 +522,7 @@
             "type": "number",
             "uid": "a1b2c3d4-0000-0000-0000-000000000007",
             "unit": "bytes",
-            "value": 64,
+            "value": 256,
             "width": 50
           },
           {

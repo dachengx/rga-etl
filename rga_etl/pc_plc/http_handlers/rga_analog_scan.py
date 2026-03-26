@@ -38,6 +38,9 @@ def _expand_commands(commands):
                 c = {**cmd, "length": length}
                 if i > 0:
                     c["nocommand"] = 1
+                if i > 1 and i != len(lengths) - 1:
+                    # params identical to chunk 1; PLC retains them — only send trigger
+                    c["_skip_params"] = True
                 expanded.append(c)
         else:
             expanded.append(cmd)
@@ -81,6 +84,14 @@ def handle_analog_scan(req, data, publish, subscribe):
     # There is a last byte in the response of SC command that indicates the total pressure
     n = (final_mass - initial_mass) * steps_per_amu + 1
     logging.info(f"Analog scan: n={n} data points")
+    total_bytes = (n + 1) * 4
+    sc_lengths = [DEFAULT_RESPONSE_LENGTH] * (total_bytes // DEFAULT_RESPONSE_LENGTH)
+    if total_bytes % DEFAULT_RESPONSE_LENGTH:
+        sc_lengths.append(total_bytes % DEFAULT_RESPONSE_LENGTH)
+    logging.info(
+        f"SC1 split into {len(sc_lengths)} chunks ({sc_lengths}) "
+        f"of up to {DEFAULT_RESPONSE_LENGTH} bytes"
+    )
     commands = [
         {
             "rga/command": f"MI{initial_mass}\r",
@@ -121,7 +132,7 @@ def handle_analog_scan(req, data, publish, subscribe):
             "rga/command": "SC1\r",
             "nocommand": 0,
             "noresponse": 0,
-            "length": (n + 1) * [4],
+            "length": sc_lengths,
             "timeout": 10.0,
         },
     ]

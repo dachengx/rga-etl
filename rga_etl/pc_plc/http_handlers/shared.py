@@ -1,6 +1,7 @@
 from srsinst.rga.instruments.rga100.components import Pressure
 
-DEFAULT_RESPONSE_LENGTH = 64
+# When the length is updated, RGAControl.json should be updated to match.
+DEFAULT_RESPONSE_LENGTH = 256
 DEFAULT_TIMEOUT = 1.0
 
 INIT_COMMANDS = [
