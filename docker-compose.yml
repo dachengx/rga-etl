@@ -10,16 +10,16 @@ services:
     ports:
       - '3306:3306'
     volumes:
-      - 'C:/mysql-data:/var/lib/mysql'
+      - 'mysql-data:/var/lib/mysql'
 
   adminer:
-    image: adminer
+    image: adminer:5.4.2
     container_name: adminer
     ports:
       - '8090:8080'
 
   grafana:
-    image: grafana/grafana-enterprise
+    image: grafana/grafana-enterprise:12.4.4
     container_name: grafana
     ports:
       - '3000:3000'
@@ -28,18 +28,18 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin'
       GF_INSTALL_PLUGINS: 'volkovlabs-form-panel'
     volumes:
-      - 'C:/grafana-data:/var/lib/grafana'
+      - 'grafana-data:/var/lib/grafana'
       - './grafana/grafana.ini:/etc/grafana/grafana.ini'
       - './grafana/provisioning/datasources:/etc/grafana/provisioning/datasources'
       - './grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards'
 
   mosquitto:
-    image: eclipse-mosquitto
+    image: eclipse-mosquitto:2.0.22
     container_name: mosquitto
     ports:
       - '1883:1883'
     volumes:
-      - '${USERPROFILE}/mosquitto.conf:/mosquitto/config/mosquitto.conf'
+      - './mosquitto.conf:/mosquitto/config/mosquitto.conf'
 
   mqtt_bridge:
     build:
@@ -55,3 +55,7 @@ services:
       MQTT_BROKER: 169.254.11.119
       MQTT_PORT: 1883
       MYSQL_HOST: mysql
+
+volumes:
+  mysql-data:
+  grafana-data:
