@@ -23,6 +23,9 @@ def analog_scan(session):
     load_dotenv()
     fake = os.getenv("FAKE_EXECUTION", "0") == "1"
 
+    instrument = init_instrument(session)
+    execution = Execution(instrument_id=instrument.id, _fake_execution=fake)
+
     if fake:
         started_at = dt.datetime.utcnow()
         rga, analog_mass_axis, analog_spectrum = fake_analog_scan()
@@ -30,6 +33,7 @@ def analog_scan(session):
     else:
         rga = init_rga()
         rga.filament.turn_on()
+        set_rga_parameters_to_execution(rga, execution)
 
         set_rga_analog_scan_parameters(rga)
         started_at = dt.datetime.utcnow()
@@ -39,10 +43,6 @@ def analog_scan(session):
 
         analog_mass_axis = rga.scan.get_mass_axis(True)
 
-    instrument = init_instrument(session)
-    execution = Execution(instrument_id=instrument.id, _fake_execution=fake)
-    if not fake:
-        set_rga_parameters_to_execution(rga, execution)
     session.add(execution)
     session.flush()
 
