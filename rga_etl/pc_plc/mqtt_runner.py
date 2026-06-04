@@ -14,15 +14,11 @@ class MQTTCommandRunner:
         broker,
         port,
         topic_prefix,
-        publish_topic_suffix="generic",
-        result_topic_suffix="result",
         sleep_between_commands=0.0,
     ):
         self.broker = broker
         self.port = port
         self.topic_prefix = topic_prefix
-        self.publish_topic = f"{topic_prefix}/{publish_topic_suffix}"
-        self.result_topic = f"{topic_prefix}/{result_topic_suffix}"
         self.sleep_between_commands = sleep_between_commands
 
         self.client = mqtt.Client()
@@ -47,8 +43,6 @@ class MQTTCommandRunner:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logging.info(f"Connected to MQTT broker at {self.broker}:{self.port}")
-            client.subscribe(self.result_topic)
-            logging.info(f"Subscribed to {self.result_topic}")
         else:
             logging.error(f"MQTT connect failed with rc={rc}")
 
@@ -57,16 +51,15 @@ class MQTTCommandRunner:
             logging.warning(f"Unexpected message on {msg.topic} — no command in progress, ignoring")
             return
         try:
-            result = post_process(self.current_command, msg.payload)
-            logging.info(f"Received on {msg.topic}: {result}")
-
-            self.current_result = result
-
-            if self.current_wait_event is not None:
-                self.current_wait_event.set()
-
+            response = post_process(self.current_command, msg.payload)
+            logging.info(f"Received on {msg.topic}: {response}")
+            self.current_result = response
         except Exception as e:
             logging.error(f"Failed to process message from {msg.topic}: {e}")
+            self.current_result = e
+        finally:
+            if self.current_wait_event is not None:
+                self.current_wait_event.set()
 
     # -------------------------
     # Basic MQTT operations
@@ -95,19 +88,26 @@ class MQTTCommandRunner:
         except Exception as e:
             logging.error(f"Failed to publish to {topic}: {e}")
 
+    def subscribe(self, topic):
+        try:
+            self.client.subscribe(topic)
+            logging.info(f"Subscribed to {topic}")
+        except Exception as e:
+            logging.error(f"Failed to subscribe to {topic}: {e}")
+
     # -------------------------
     # Public API
     # -------------------------
     def run_commands(self, commands):
-        results = []
+        responses = []
         for command in commands:
             self.command_queue.put(command)
             self.command_queue.join()
-            result = self.current_result
-            if isinstance(result, Exception):
-                raise result
-            results.append(result if command.get("noresult", 0) == 0 else None)
-        return results
+            response = self.current_result
+            if isinstance(response, Exception):
+                raise response
+            responses.append(response if command.get("noresponse", 0) == 0 else None)
+        return responses
 
     # -------------------------
     # Internal worker
@@ -123,32 +123,45 @@ class MQTTCommandRunner:
 
             logging.info(f"Sending command: {command}")
 
-            # trigger/send command group
-            for key, value in command.items():
-                if key == "timeout":
-                    continue
-                topic = f"{self.topic_prefix}/{key}"
-                self.publish(topic, value)
-            # must inform the subscriber to start executing the command after all parameters are set
-            self.publish(self.publish_topic, 1)
+            publish_topic = f"{self.topic_prefix}/{command['publish']}"
+            subscribe_topic = f"{self.topic_prefix}/{command['subscribe']}"
 
-            # wait only if result is expected
-            if command.get("noresult", 0) == 0:
+            # Subscribe and arm the wait event BEFORE publishing the trigger so that
+            # a fast PLC response (e.g. serial data already buffered) cannot arrive
+            # between the trigger publish and the event creation and be silently lost.
+            if command.get("noresponse", 0) == 0:
+                self.subscribe(subscribe_topic)
                 self.current_wait_event = threading.Event()
 
-                logging.info("Waiting for result...")
+            # publish parameters, then trigger execution.
+            # Keys used only for Python-side routing are excluded from MQTT.
+            # Commands marked with _skip_params only send the trigger — the PLC
+            # retains parameter values from the previous identical sub-command.
+            _ROUTING_KEYS = {"timeout", "publish", "subscribe"}
+            if not command.get("_skip_params", False):
+                for key, value in command.items():
+                    if key in _ROUTING_KEYS or key.startswith("_"):
+                        continue
+                    topic = f"{self.topic_prefix}/{key}"
+                    self.publish(topic, value)
+
+            # must inform the subscriber to start executing the command after all parameters are set
+            self.publish(publish_topic, 1)
+
+            if command.get("noresponse", 0) == 0:
+                logging.info("Waiting for response...")
                 ok = self.current_wait_event.wait(timeout=command["timeout"])
 
                 if ok:
-                    logging.info(f"Command finished with result: {self.current_result}")
+                    logging.info(f"Command finished with response: {self.current_result}")
                 else:
                     self.current_result = TimeoutError(
-                        f"Timeout waiting for result for command: {command}"
+                        f"Timeout waiting for response for command: {command}"
                     )
 
                 self.current_wait_event = None
             else:
-                logging.info("Command does not require result, continuing immediately")
+                logging.info("Command does not require response, continuing immediately")
 
             self.command_queue.task_done()
             self.current_command = None
