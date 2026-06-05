@@ -121,7 +121,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  p.amu AS x,\n  CAST(s.started_at AS CHAR) AS started_at,\n  p.intensity AS intensity\nFROM analog_scan_points p\nJOIN analog_scans s\n  ON p.scan_id = s.id\nWHERE p.scan_id IN (${analog_scan_id:csv})\nORDER BY s.started_at, x;",
+          "rawSql": "SELECT\n  p.amu AS x,\n  CAST(s.started_at AS CHAR) AS started_at,\n  p.intensity AS intensity\nFROM analog_scan_points p\nJOIN analog_scans s\n  ON p.scan_id = s.id\nWHERE p.scan_id IN (0,${analog_scan_id:csv})\n  AND $__timeFilter(s.started_at)\nORDER BY s.started_at, x;",
           "refId": "AnalogScan",
           "sql": {
             "columns": [
@@ -172,13 +172,13 @@
             "$__all"
           ]
         },
-        "definition": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nORDER BY started_at DESC;\n",
+        "definition": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nWHERE $__timeFilter(started_at)\nORDER BY started_at DESC;\n",
         "includeAll": true,
         "multi": true,
         "name": "analog_scan_id",
         "options": [],
-        "query": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nORDER BY started_at DESC;\n",
-        "refresh": 1,
+        "query": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nWHERE $__timeFilter(started_at)\nORDER BY started_at DESC;\n",
+        "refresh": 2,
         "regex": "",
         "sort": 2,
         "type": "query"
