@@ -18,7 +18,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -37,33 +36,21 @@
             "axisColorMode": "text",
             "axisLabel": "Intensity [0.1 fA]",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
+            "fillOpacity": 50,
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
+            "pointShape": "circle",
+            "pointSize": {
+              "fixed": 5
+            },
+            "pointStrokeWidth": 1,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "show": "points"
           },
           "mappings": [],
           "thresholds": {
@@ -80,7 +67,24 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "x"
+            },
+            "properties": [
+              {
+                "id": "custom.axisLabel",
+                "value": "M/Q [amu/e]"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "bottom"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -88,7 +92,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [],
@@ -96,25 +100,29 @@
           "placement": "bottom",
           "showLegend": true
         },
+        "mapping": "auto",
+        "series": [
+          {}
+        ],
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.0",
+      "pluginVersion": "12.4.4",
       "targets": [
         {
           "dataset": "rga",
           "datasource": {
             "type": "mysql",
-            "uid": "ff5p5uvo505c0f"
+            "uid": "PC8390AFFAE080541"
           },
           "editorMode": "code",
-          "format": "time_series",
+          "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\r\n  -- Convert relative time to absolute timestamp\r\n  s.started_at + INTERVAL p.time SECOND AS time,\r\n  -- One series per mass\r\n  CONCAT('m=', p.mass) AS metric,\r\n  -- Use intensity exactly as stored\r\n  p.intensity AS value\r\nFROM p_vs_t_scan_points p\r\nJOIN p_vs_t_scans s\r\n  ON p.scan_id = s.id\r\nWHERE\r\n  p.scan_id = (SELECT id FROM p_vs_t_scans ORDER BY started_at DESC LIMIT 1)\r\n  AND p.mass IN (${p_vs_t_scan_mass:csv})\r\nORDER BY time;\r\n",
-          "refId": "PvsTScan",
+          "rawSql": "SELECT\n  p.amu AS x,\n  CAST(s.started_at AS CHAR) AS started_at,\n  p.intensity AS intensity\nFROM analog_scan_points p\nJOIN analog_scans s\n  ON p.scan_id = s.id\nWHERE p.scan_id IN (0,${analog_scan_id:csv})\n  AND $__timeFilter(s.started_at)\nORDER BY s.started_at, x;",
+          "refId": "AnalogScan",
           "sql": {
             "columns": [
               {
@@ -134,8 +142,22 @@
           }
         }
       ],
-      "title": "PvsTScan",
-      "type": "timeseries"
+      "title": "AnalogScan",
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "started_at"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ],
+      "type": "xychart"
     }
   ],
   "preload": false,
@@ -150,43 +172,27 @@
             "$__all"
           ]
         },
-        "definition": "SELECT id AS __value, CONCAT('Scan ', id) AS __text\nFROM p_vs_t_scans\nORDER BY id DESC;\n",
+        "definition": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nWHERE $__timeFilter(started_at)\nORDER BY started_at DESC;\n",
         "includeAll": true,
         "multi": true,
-        "name": "p_vs_t_scan_id",
+        "name": "analog_scan_id",
         "options": [],
-        "query": "SELECT id AS __value, CONCAT('Scan ', id) AS __text\nFROM p_vs_t_scans\nORDER BY id DESC;\n",
-        "refresh": 1,
+        "query": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nWHERE $__timeFilter(started_at)\nORDER BY started_at DESC;\n",
+        "refresh": 2,
         "regex": "",
         "sort": 2,
-        "type": "query"
-      },
-      {
-        "current": {
-          "text": "All",
-          "value": [
-            "$__all"
-          ]
-        },
-        "definition": "SELECT DISTINCT mass FROM p_vs_t_scan_points ORDER BY mass;\n",
-        "includeAll": true,
-        "multi": true,
-        "name": "p_vs_t_scan_mass",
-        "options": [],
-        "query": "SELECT DISTINCT mass FROM p_vs_t_scan_points ORDER BY mass;\n",
-        "refresh": 1,
-        "regex": "",
         "type": "query"
       }
     ]
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "PvsTScan",
-  "uid": "pvstscan",
-  "version": 1
+  "title": "AnalogScan",
+  "uid": "gxvg9x",
+  "version": 1,
+  "weekStart": ""
 }
