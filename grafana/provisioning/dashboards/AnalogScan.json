@@ -34,7 +34,7 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Intensity [0.1 fA]",
             "axisPlacement": "auto",
             "fillOpacity": 50,
             "hideFrom": {
@@ -67,7 +67,24 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "x"
+            },
+            "properties": [
+              {
+                "id": "custom.axisLabel",
+                "value": "M/Q [amu/e]"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "bottom"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -104,7 +121,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  -- Use absolute timestamp as label\n  s.started_at AS metric,\n  -- One series per scan\n  p.amu AS x,\n  -- Use intensity exactly as stored\n  p.intensity AS y\nFROM analog_scan_points p\nJOIN analog_scans s\n  ON p.scan_id = s.id\nWHERE s.id = (\n  SELECT id FROM analog_scans ORDER BY started_at DESC LIMIT 1\n)\nORDER BY x;",
+          "rawSql": "SELECT\n  -- Use absolute timestamp as label\n  s.started_at AS metric,\n  -- One series per scan\n  p.amu AS x,\n  -- Use intensity exactly as stored\n  p.intensity AS y\nFROM analog_scan_points p\nJOIN analog_scans s\n  ON p.scan_id = s.id\nWHERE p.scan_id IN (${analog_scan_id:csv})\nORDER BY x;",
           "refId": "AnalogScan",
           "sql": {
             "columns": [
@@ -133,7 +150,26 @@
   "schemaVersion": 42,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "definition": "SELECT id AS __value, CONCAT('Scan ', id) AS __text\nFROM analog_scans\nORDER BY id DESC;\n",
+        "includeAll": true,
+        "multi": true,
+        "name": "analog_scan_id",
+        "options": [],
+        "query": "SELECT id AS __value, CONCAT('Scan ', id) AS __text\nFROM analog_scans\nORDER BY id DESC;\n",
+        "refresh": 1,
+        "regex": "",
+        "sort": 2,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
