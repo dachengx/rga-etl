@@ -101,9 +101,7 @@
           "showLegend": true
         },
         "mapping": "auto",
-        "series": [
-          {}
-        ],
+        "series": [{}],
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
@@ -147,9 +145,7 @@
         {
           "id": "partitionByValues",
           "options": {
-            "fields": [
-              "started_at"
-            ],
+            "fields": ["started_at"],
             "keepFields": false,
             "naming": {
               "asLabels": false
@@ -168,9 +164,7 @@
       {
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": ["$__all"]
         },
         "definition": "SELECT id AS __value, CAST(started_at AS CHAR) AS __text\nFROM analog_scans\nWHERE $__timeFilter(started_at)\nORDER BY started_at DESC;\n",
         "includeAll": true,

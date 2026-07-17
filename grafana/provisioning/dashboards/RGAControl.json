@@ -46,11 +46,7 @@
           "body": "Please confirm to update changed values",
           "cancel": "Cancel",
           "columns": {
-            "include": [
-              "name",
-              "oldValue",
-              "newValue"
-            ],
+            "include": ["name", "oldValue", "newValue"],
             "name": "Label",
             "newValue": "New Value",
             "oldValue": "Old Value"
@@ -543,8 +539,8 @@
             "id": "WITH_RESULT",
             "labelWidth": 20,
             "options": [
-              {"id": "0", "label": "No",  "type": "number", "value": 0},
-              {"id": "1", "label": "Yes", "type": "number", "value": 1}
+              { "id": "0", "label": "No", "type": "number", "value": 0 },
+              { "id": "1", "label": "Yes", "type": "number", "value": 1 }
             ],
             "optionsSource": "Custom",
             "section": "",
