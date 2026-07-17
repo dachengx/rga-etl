@@ -1,0 +1,37 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+  python-mqtt:
+    build: ./python
+    container_name: python-mqtt
+    restart: unless-stopped
+    volumes:
+      - ./dashboard:/app/data
+    depends_on:
+      - mosquitto
+
+  dashboard:
+    image: python:3.12-alpine
+    container_name: xtract-monitor
+    restart: unless-stopped
+    working_dir: /dashboard
+    command:
+      - python
+      - -m
+      - http.server
+      - "8000"
+      - --bind
+      - "0.0.0.0"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./dashboard:/dashboard:ro
