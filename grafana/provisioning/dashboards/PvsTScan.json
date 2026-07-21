@@ -146,9 +146,7 @@
       {
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": ["$__all"]
         },
         "definition": "SELECT id AS __value, CONCAT('Scan ', id) AS __text\nFROM p_vs_t_scans\nORDER BY id DESC;\n",
         "includeAll": true,
@@ -164,9 +162,7 @@
       {
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": ["$__all"]
         },
         "definition": "SELECT DISTINCT mass FROM p_vs_t_scan_points ORDER BY mass;\n",
         "includeAll": true,

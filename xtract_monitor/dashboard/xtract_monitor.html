@@ -1,22 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>PID Live Display</title>
+    <title>PID Live Display</title>
 
-<style>
-    html, body {
+    <style>
+      html,
+      body {
         margin: 0;
         width: 100%;
         height: 100%;
         overflow: hidden;
         background: #20242a;
         font-family: Arial, sans-serif;
-    }
+      }
 
-    #toolbar {
+      #toolbar {
         height: 46px;
         box-sizing: border-box;
         display: flex;
@@ -25,638 +26,610 @@
         padding: 6px 12px;
         color: white;
         background: #30363d;
-    }
+      }
 
-    button {
+      button {
         padding: 6px 12px;
         cursor: pointer;
-    }
+      }
 
-    #statusText {
+      #statusText {
         margin-left: auto;
         font-size: 14px;
         color: #c8d1da;
-    }
+      }
 
-    #viewport {
+      #viewport {
         width: 100%;
         height: calc(100% - 46px);
         overflow: auto;
         display: flex;
         justify-content: center;
         align-items: flex-start;
-    }
+      }
 
-    /*
+      /*
        The overlay coordinate system is based on the original
        pixel dimensions of pid.png.
     */
-    #pidContainer {
+      #pidContainer {
         position: relative;
         display: inline-block;
         max-width: 100%;
         user-select: none;
-    }
+      }
 
-    #pidImage {
+      #pidImage {
         display: block;
         width: 100%;
         height: auto;
-    }
+      }
 
-    #overlayCanvas {
+      #overlayCanvas {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
         touch-action: none;
-    }
-</style>
-</head>
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <div id="toolbar">
+      <button id="fitButton">Fit to screen</button>
+      <button id="actualSizeButton">Actual size</button>
+      <button id="editButton">Edit positions: OFF</button>
+      <button id="copyButton">Copy positions</button>
 
-<div id="toolbar">
-    <button id="fitButton">Fit to screen</button>
-    <button id="actualSizeButton">Actual size</button>
-    <button id="editButton">Edit positions: OFF</button>
-    <button id="copyButton">Copy positions</button>
-
-    <span id="statusText">Waiting for data...</span>
-</div>
-
-<div id="viewport">
-    <div id="pidContainer">
-        <img id="pidImage" src="pid.png" alt="PID diagram">
-        <canvas id="overlayCanvas"></canvas>
+      <span id="statusText">Waiting for data...</span>
     </div>
-</div>
 
-<script>
-// ============================================================
-// POSITION CONFIGURATION
-//
-// x and y are pixel coordinates in the ORIGINAL pid.png.
-// These coordinates do not depend on the monitor resolution.
-//
-// Change x and y here, or turn on "Edit positions" and drag
-// the indicators with the mouse.
-// ============================================================
+    <div id="viewport">
+      <div id="pidContainer">
+        <img id="pidImage" src="pid.png" alt="PID diagram" />
+        <canvas id="overlayCanvas"></canvas>
+      </div>
+    </div>
 
-const valveDefinitions = [
-    { id: "PV2001", label: "PV2001", x: 245, y: 459 },
-    { id: "PV2002", label: "PV2002", x: 375, y: 587 },
-    { id: "PV2003", label: "PV2003", x: 578, y: 459 },
-    { id: "PV2004", label: "PV2004", x: 578, y: 348 },
-    { id: "PV2005", label: "PV2005", x: 1023, y: 459 },
-    { id: "PV2006", label: "PV2006", x: 2170, y: 459 },
-    { id: "PV2009", label: "PV2009", x: 1375, y: 232 },
-    { id: "PV2010", label: "PV2010", x: 245, y: 348 },
-    { id: "PV2011", label: "PV2011", x: 1265, y: 232 },
-    { id: "PV2112", label: "PV2112", x: 2005, y: 640 },
-    { id: "PV2113", label: "PV2113", x: 1485, y: 640 },
-    { id: "PV2114", label: "PV2114", x: 1875, y: 735 },
-    { id: "PV2115", label: "PV2115", x: 2005, y: 828 },
-    { id: "PV2116", label: "PV2116", x: 1485, y: 828 },
-];
+    <script>
+      // ============================================================
+      // POSITION CONFIGURATION
+      //
+      // x and y are pixel coordinates in the ORIGINAL pid.png.
+      // These coordinates do not depend on the monitor resolution.
+      //
+      // Change x and y here, or turn on "Edit positions" and drag
+      // the indicators with the mouse.
+      // ============================================================
 
-const sensorDefinitions = [
-    {
-        id: "PT2001Tor",
-        // label: "PT2001",
-        unit: "Tor",
-        decimals: 2,
-        x: 375,
-        y: 158
-    },
-    {
-        id: "PT2002Bar",
-        // label: "PT2002",
-        unit: "Bar",
-        decimals: 2,
-        x: 1475,
-        y: 400
-    },
-    {
-        id: "PT2003Tor",
-        // label: "PT2003",
-        unit: "Tor",
-        decimals: 2,
-        x: 2410,
-        y: 232
-    },
-    {
-        id: "PT2104Tor",
-        // label: "PT2104",
-        unit: "Tor",
-        decimals: 2,
-        x: 1766,
-        y: 843
-    },
-    {
-        id: "MFCFSetSLPM",
-        label: "Set",
-        unit: "slpm",
-        decimals: 2,
-        x: 800,
-        y: 494
-    },
-    {
-        id: "MFCFMsrSLPM",
-        label: "Msr",
-        unit: "slpm",
-        decimals: 2,
-        x: 800,
-        y: 534
-    }
-];
+      const valveDefinitions = [
+        { id: "PV2001", label: "PV2001", x: 245, y: 459 },
+        { id: "PV2002", label: "PV2002", x: 375, y: 587 },
+        { id: "PV2003", label: "PV2003", x: 578, y: 459 },
+        { id: "PV2004", label: "PV2004", x: 578, y: 348 },
+        { id: "PV2005", label: "PV2005", x: 1023, y: 459 },
+        { id: "PV2006", label: "PV2006", x: 2170, y: 459 },
+        { id: "PV2009", label: "PV2009", x: 1375, y: 232 },
+        { id: "PV2010", label: "PV2010", x: 245, y: 348 },
+        { id: "PV2011", label: "PV2011", x: 1265, y: 232 },
+        { id: "PV2112", label: "PV2112", x: 2005, y: 640 },
+        { id: "PV2113", label: "PV2113", x: 1485, y: 640 },
+        { id: "PV2114", label: "PV2114", x: 1875, y: 735 },
+        { id: "PV2115", label: "PV2115", x: 2005, y: 828 },
+        { id: "PV2116", label: "PV2116", x: 1485, y: 828 },
+      ];
 
-// ============================================================
-// APPEARANCE
-// Sizes are in original-image pixels, so they scale with pid.png.
-// ============================================================
+      const sensorDefinitions = [
+        {
+          id: "PT2001Tor",
+          // label: "PT2001",
+          unit: "Tor",
+          decimals: 2,
+          x: 375,
+          y: 158,
+        },
+        {
+          id: "PT2002Bar",
+          // label: "PT2002",
+          unit: "Bar",
+          decimals: 2,
+          x: 1475,
+          y: 400,
+        },
+        {
+          id: "PT2003Tor",
+          // label: "PT2003",
+          unit: "Tor",
+          decimals: 2,
+          x: 2410,
+          y: 232,
+        },
+        {
+          id: "PT2104Tor",
+          // label: "PT2104",
+          unit: "Tor",
+          decimals: 2,
+          x: 1766,
+          y: 843,
+        },
+        {
+          id: "MFCFSetSLPM",
+          label: "Set",
+          unit: "slpm",
+          decimals: 2,
+          x: 800,
+          y: 494,
+        },
+        {
+          id: "MFCFMsrSLPM",
+          label: "Msr",
+          unit: "slpm",
+          decimals: 2,
+          x: 800,
+          y: 534,
+        },
+      ];
 
-const displayStyle = {
-    valveRadius: 40,
+      // ============================================================
+      // APPEARANCE
+      // Sizes are in original-image pixels, so they scale with pid.png.
+      // ============================================================
 
-    valveOnColor: "rgba(0, 220, 80, 0.75)",
-    valveOffColor: "rgba(255, 40, 40, 0.75)",
-    valveUnknownColor: "rgba(150, 150, 150, 0.75)",
+      const displayStyle = {
+        valveRadius: 40,
 
-    valveBorderColor: "rgba(0, 0, 0, 0.9)",
-    valveBorderWidth: 3,
+        valveOnColor: "rgba(0, 220, 80, 0.75)",
+        valveOffColor: "rgba(255, 40, 40, 0.75)",
+        valveUnknownColor: "rgba(150, 150, 150, 0.75)",
 
-    valveLabelColor: "black",
-    valveLabelBackground: "rgba(255, 255, 255, 0.5)",
-    valveLabelFont: "bold 18px Arial",
+        valveBorderColor: "rgba(0, 0, 0, 0.9)",
+        valveBorderWidth: 3,
 
-    sensorValueColor: "black",
-    sensorBackground: "rgba(255, 255, 255, 0.5)",
-    sensorBorderColor: "rgba(0, 0, 0, 0.8)",
-    sensorFont: "bold 30px Arial",
+        valveLabelColor: "black",
+        valveLabelBackground: "rgba(255, 255, 255, 0.5)",
+        valveLabelFont: "bold 18px Arial",
 
-    selectedColor: "#00aaff"
-};
+        sensorValueColor: "black",
+        sensorBackground: "rgba(255, 255, 255, 0.5)",
+        sensorBorderColor: "rgba(0, 0, 0, 0.8)",
+        sensorFont: "bold 30px Arial",
 
-// ============================================================
-// EXAMPLE LIVE DATA
-//
-// Replace this dictionary with the JSON dictionary received
-// from Python later.
-// ============================================================
+        selectedColor: "#00aaff",
+      };
 
-let liveData = {
-    PV2001: false,
-    PV2002: false,
-    PV2003: false,
-    PV2004: false,
-    PV2005: false,
-    PV2006: false,
-    PV2009: false,
-    PV2010: false,
-    PV2011: false,
-    PV2112: false,
-    PV2113: false,
-    PV2114: false,
-    PV2115: false,
-    PV2116: false,
+      // ============================================================
+      // EXAMPLE LIVE DATA
+      //
+      // Replace this dictionary with the JSON dictionary received
+      // from Python later.
+      // ============================================================
 
-    PT2001Tor: 0.00,
-    PT2002Bar: 0.00,
-    PT2003Tor: 0.00,
-    PT2104Tor: 0.00,
-    MFCFSetSLPM: 0.00,
-    MFCFMsrSLPM: 0.00
-};
+      let liveData = {
+        PV2001: false,
+        PV2002: false,
+        PV2003: false,
+        PV2004: false,
+        PV2005: false,
+        PV2006: false,
+        PV2009: false,
+        PV2010: false,
+        PV2011: false,
+        PV2112: false,
+        PV2113: false,
+        PV2114: false,
+        PV2115: false,
+        PV2116: false,
 
-const image = document.getElementById("pidImage");
-const canvas = document.getElementById("overlayCanvas");
-const context = canvas.getContext("2d");
-const container = document.getElementById("pidContainer");
-const viewport = document.getElementById("viewport");
-const statusText = document.getElementById("statusText");
+        PT2001Tor: 0.0,
+        PT2002Bar: 0.0,
+        PT2003Tor: 0.0,
+        PT2104Tor: 0.0,
+        MFCFSetSLPM: 0.0,
+        MFCFMsrSLPM: 0.0,
+      };
 
-let editMode = false;
-let selectedItem = null;
-let draggingItem = null;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
+      const image = document.getElementById("pidImage");
+      const canvas = document.getElementById("overlayCanvas");
+      const context = canvas.getContext("2d");
+      const container = document.getElementById("pidContainer");
+      const viewport = document.getElementById("viewport");
+      const statusText = document.getElementById("statusText");
 
-// ============================================================
-// INITIALIZATION
-// ============================================================
+      let editMode = false;
+      let selectedItem = null;
+      let draggingItem = null;
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
 
-image.addEventListener("load", () => {
-    // Canvas coordinates exactly match original pid.png coordinates.
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
+      // ============================================================
+      // INITIALIZATION
+      // ============================================================
 
-    fitToScreen();
-    drawDisplay();
+      image.addEventListener("load", () => {
+        // Canvas coordinates exactly match original pid.png coordinates.
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
 
-    statusText.textContent =
-        `Image: ${image.naturalWidth} × ${image.naturalHeight}`;
-});
+        fitToScreen();
+        drawDisplay();
 
-// ============================================================
-// DRAWING
-// ============================================================
+        statusText.textContent = `Image: ${image.naturalWidth} × ${image.naturalHeight}`;
+      });
 
-function drawDisplay() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
+      // ============================================================
+      // DRAWING
+      // ============================================================
 
-    for (const valve of valveDefinitions) {
-        drawValve(valve, liveData[valve.id]);
-    }
+      function drawDisplay() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (const sensor of sensorDefinitions) {
-        drawSensor(sensor, liveData[sensor.id]);
-    }
-}
+        for (const valve of valveDefinitions) {
+          drawValve(valve, liveData[valve.id]);
+        }
 
-function drawValve(valve, value) {
-    let color = displayStyle.valveUnknownColor;
+        for (const sensor of sensorDefinitions) {
+          drawSensor(sensor, liveData[sensor.id]);
+        }
+      }
 
-    if (value === true || value === 1) {
-        color = displayStyle.valveOnColor;
-    } else if (value === false || value === 0) {
-        color = displayStyle.valveOffColor;
-    }
+      function drawValve(valve, value) {
+        let color = displayStyle.valveUnknownColor;
 
-    context.beginPath();
-    context.arc(
-        valve.x,
-        valve.y,
-        displayStyle.valveRadius,
-        0,
-        Math.PI * 2
-    );
+        if (value === true || value === 1) {
+          color = displayStyle.valveOnColor;
+        } else if (value === false || value === 0) {
+          color = displayStyle.valveOffColor;
+        }
 
-    context.fillStyle = color;
-    context.fill();
+        context.beginPath();
+        context.arc(valve.x, valve.y, displayStyle.valveRadius, 0, Math.PI * 2);
 
-    context.lineWidth =
-        selectedItem === valve
-            ? 5
-            : displayStyle.valveBorderWidth;
+        context.fillStyle = color;
+        context.fill();
 
-    context.strokeStyle =
-        selectedItem === valve
+        context.lineWidth =
+          selectedItem === valve ? 5 : displayStyle.valveBorderWidth;
+
+        context.strokeStyle =
+          selectedItem === valve
             ? displayStyle.selectedColor
             : displayStyle.valveBorderColor;
 
-    context.stroke();
+        context.stroke();
 
-    // drawTextBox(
-    //     valve.label,
-    //     valve.x,
-    //     valve.y + displayStyle.valveRadius + 8,
-    //     displayStyle.valveLabelFont,
-    //     displayStyle.valveLabelColor,
-    //     displayStyle.valveLabelBackground,
-    //     "center"
-    // );
-}
+        // drawTextBox(
+        //     valve.label,
+        //     valve.x,
+        //     valve.y + displayStyle.valveRadius + 8,
+        //     displayStyle.valveLabelFont,
+        //     displayStyle.valveLabelColor,
+        //     displayStyle.valveLabelBackground,
+        //     "center"
+        // );
+      }
 
-function drawSensor(sensor, value) {
-    let formattedValue = "---";
+      function drawSensor(sensor, value) {
+        let formattedValue = "---";
 
-    const numericValue = Number(value);
+        const numericValue = Number(value);
 
-    if (Number.isFinite(numericValue)) {
-        formattedValue = numericValue.toExponential(sensor.decimals);
-    }
+        if (Number.isFinite(numericValue)) {
+          formattedValue = numericValue.toExponential(sensor.decimals);
+        }
 
-    const text =
-        (sensor.label ? `${sensor.label}: ` : "") +
-        `${formattedValue}` +
-        (sensor.unit ? ` ${sensor.unit}` : "");
+        const text =
+          (sensor.label ? `${sensor.label}: ` : "") +
+          `${formattedValue}` +
+          (sensor.unit ? ` ${sensor.unit}` : "");
 
-    drawTextBox(
-        text,
-        sensor.x,
-        sensor.y,
-        displayStyle.sensorFont,
-        displayStyle.sensorValueColor,
-        displayStyle.sensorBackground,
-        "center",
-        selectedItem === sensor
+        drawTextBox(
+          text,
+          sensor.x,
+          sensor.y,
+          displayStyle.sensorFont,
+          displayStyle.sensorValueColor,
+          displayStyle.sensorBackground,
+          "center",
+          selectedItem === sensor
             ? displayStyle.selectedColor
-            : displayStyle.sensorBorderColor
-    );
-}
+            : displayStyle.sensorBorderColor,
+        );
+      }
 
-function drawTextBox(
-    text,
-    x,
-    y,
-    font,
-    textColor,
-    backgroundColor,
-    alignment = "center",
-    borderColor = "rgba(0, 0, 0, 0.8)"
-) {
-    const paddingX = 8;
-    const paddingY = 5;
+      function drawTextBox(
+        text,
+        x,
+        y,
+        font,
+        textColor,
+        backgroundColor,
+        alignment = "center",
+        borderColor = "rgba(0, 0, 0, 0.8)",
+      ) {
+        const paddingX = 8;
+        const paddingY = 5;
 
-    context.font = font;
-    context.textBaseline = "top";
+        context.font = font;
+        context.textBaseline = "top";
 
-    const textWidth = context.measureText(text).width;
-    const boxWidth = textWidth + 2 * paddingX;
-    const boxHeight = 40;
+        const textWidth = context.measureText(text).width;
+        const boxWidth = textWidth + 2 * paddingX;
+        const boxHeight = 40;
 
-    let boxX = x;
+        let boxX = x;
 
-    if (alignment === "center") {
-        boxX = x - boxWidth / 2;
-    }
+        if (alignment === "center") {
+          boxX = x - boxWidth / 2;
+        }
 
-    context.fillStyle = backgroundColor;
-    context.fillRect(boxX, y, boxWidth, boxHeight);
+        context.fillStyle = backgroundColor;
+        context.fillRect(boxX, y, boxWidth, boxHeight);
 
-    context.lineWidth = 2;
-    context.strokeStyle = borderColor;
-    context.strokeRect(boxX, y, boxWidth, boxHeight);
+        context.lineWidth = 2;
+        context.strokeStyle = borderColor;
+        context.strokeRect(boxX, y, boxWidth, boxHeight);
 
-    context.fillStyle = textColor;
-    context.fillText(text, boxX + paddingX, y + paddingY);
-}
+        context.fillStyle = textColor;
+        context.fillText(text, boxX + paddingX, y + paddingY);
+      }
 
-// ============================================================
-// DATA UPDATE
-//
-// Call updateDisplay(newDictionary) whenever Python provides
-// a new JSON dictionary.
-// ============================================================
+      // ============================================================
+      // DATA UPDATE
+      //
+      // Call updateDisplay(newDictionary) whenever Python provides
+      // a new JSON dictionary.
+      // ============================================================
 
-function updateDisplay(newData) {
-    if (!newData || typeof newData !== "object") {
-        console.error("Received invalid data:", newData);
-        return;
-    }
+      function updateDisplay(newData) {
+        if (!newData || typeof newData !== "object") {
+          console.error("Received invalid data:", newData);
+          return;
+        }
 
-    liveData = {
-        ...liveData,
-        ...newData
-    };
+        liveData = {
+          ...liveData,
+          ...newData,
+        };
 
-    drawDisplay();
+        drawDisplay();
 
-    statusText.textContent =
-        "Last update: " + new Date().toLocaleTimeString();
-}
+        statusText.textContent =
+          "Last update: " + new Date().toLocaleTimeString();
+      }
 
-// ============================================================
-// LOAD LIVE DATA FROM JSON FILES
-// ============================================================
+      // ============================================================
+      // LOAD LIVE DATA FROM JSON FILES
+      // ============================================================
 
-const UPDATE_INTERVAL_MS = 500;
+      const UPDATE_INTERVAL_MS = 500;
 
-let loadingData = false;
+      let loadingData = false;
 
-async function loadJsonFiles() {
-    // Prevent overlapping requests if one update is slow.
-    if (loadingData) {
-        return;
-    }
+      async function loadJsonFiles() {
+        // Prevent overlapping requests if one update is slow.
+        if (loadingData) {
+          return;
+        }
 
-    loadingData = true;
+        loadingData = true;
 
-    try {
-        // Timestamp prevents the browser from returning cached JSON.
-        const cacheBuster = Date.now();
+        try {
+          // Timestamp prevents the browser from returning cached JSON.
+          const cacheBuster = Date.now();
 
-        const [pvResponse, sensorResponse] = await Promise.all([
+          const [pvResponse, sensorResponse] = await Promise.all([
             fetch(`pv_status.json?t=${cacheBuster}`, {
-                cache: "no-store"
+              cache: "no-store",
             }),
             fetch(`sensor_status.json?t=${cacheBuster}`, {
-                cache: "no-store"
-            })
-        ]);
+              cache: "no-store",
+            }),
+          ]);
 
-        if (!pvResponse.ok) {
+          if (!pvResponse.ok) {
+            throw new Error(`pv_status.json: HTTP ${pvResponse.status}`);
+          }
+
+          if (!sensorResponse.ok) {
             throw new Error(
-                `pv_status.json: HTTP ${pvResponse.status}`
+              `sensor_status.json: HTTP ${sensorResponse.status}`,
             );
-        }
+          }
 
-        if (!sensorResponse.ok) {
-            throw new Error(
-                `sensor_status.json: HTTP ${sensorResponse.status}`
-            );
-        }
+          const pvData = await pvResponse.json();
+          const sensorData = await sensorResponse.json();
 
-        const pvData = await pvResponse.json();
-        const sensorData = await sensorResponse.json();
-
-        // Combine the two dictionaries.
-        updateDisplay({
+          // Combine the two dictionaries.
+          updateDisplay({
             ...pvData,
-            ...sensorData
-        });
+            ...sensorData,
+          });
 
-        statusText.textContent =
+          statusText.textContent =
             "Last update: " + new Date().toLocaleTimeString();
+        } catch (error) {
+          console.error("Could not load JSON data:", error);
 
-    } catch (error) {
-        console.error("Could not load JSON data:", error);
+          statusText.textContent = "Data loading error: " + error.message;
+        } finally {
+          loadingData = false;
+        }
+      }
 
-        statusText.textContent =
-            "Data loading error: " + error.message;
-    } finally {
-        loadingData = false;
-    }
-}
+      // Load immediately.
+      loadJsonFiles();
 
-// Load immediately.
-loadJsonFiles();
+      // Then reload every 500 ms.
+      setInterval(loadJsonFiles, UPDATE_INTERVAL_MS);
 
-// Then reload every 500 ms.
-setInterval(loadJsonFiles, UPDATE_INTERVAL_MS);
+      // ============================================================
+      // RESPONSIVE SCALING
+      // ============================================================
 
-// ============================================================
-// RESPONSIVE SCALING
-// ============================================================
+      function fitToScreen() {
+        if (!image.naturalWidth || !image.naturalHeight) {
+          return;
+        }
 
-function fitToScreen() {
-    if (!image.naturalWidth || !image.naturalHeight) {
-        return;
-    }
+        const availableWidth = viewport.clientWidth - 20;
+        const availableHeight = viewport.clientHeight - 20;
 
-    const availableWidth = viewport.clientWidth - 20;
-    const availableHeight = viewport.clientHeight - 20;
+        const scale = Math.min(
+          availableWidth / image.naturalWidth,
+          availableHeight / image.naturalHeight,
+          1,
+        );
 
-    const scale = Math.min(
-        availableWidth / image.naturalWidth,
-        availableHeight / image.naturalHeight,
-        1
-    );
+        container.style.width = `${Math.round(image.naturalWidth * scale)}px`;
+      }
 
-    container.style.width =
-        `${Math.round(image.naturalWidth * scale)}px`;
-}
+      function showActualSize() {
+        container.style.width = `${image.naturalWidth}px`;
+      }
 
-function showActualSize() {
-    container.style.width = `${image.naturalWidth}px`;
-}
+      document
+        .getElementById("fitButton")
+        .addEventListener("click", fitToScreen);
 
-document
-    .getElementById("fitButton")
-    .addEventListener("click", fitToScreen);
+      document
+        .getElementById("actualSizeButton")
+        .addEventListener("click", showActualSize);
 
-document
-    .getElementById("actualSizeButton")
-    .addEventListener("click", showActualSize);
+      window.addEventListener("resize", () => {
+        // Uncomment this if you always want automatic refitting:
+        // fitToScreen();
+      });
 
-window.addEventListener("resize", () => {
-    // Uncomment this if you always want automatic refitting:
-    // fitToScreen();
-});
+      // ============================================================
+      // POSITION EDITOR
+      // ============================================================
 
-// ============================================================
-// POSITION EDITOR
-// ============================================================
+      document
+        .getElementById("editButton")
+        .addEventListener("click", (event) => {
+          editMode = !editMode;
 
-document
-    .getElementById("editButton")
-    .addEventListener("click", event => {
-        editMode = !editMode;
+          event.target.textContent = `Edit positions: ${editMode ? "ON" : "OFF"}`;
 
-        event.target.textContent =
-            `Edit positions: ${editMode ? "ON" : "OFF"}`;
+          canvas.style.cursor = editMode ? "crosshair" : "default";
 
-        canvas.style.cursor = editMode ? "crosshair" : "default";
-
-        if (!editMode) {
+          if (!editMode) {
             selectedItem = null;
             draggingItem = null;
             drawDisplay();
+          }
+        });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        if (!editMode) {
+          return;
         }
-    });
 
-canvas.addEventListener("pointerdown", event => {
-    if (!editMode) {
-        return;
-    }
+        const point = getCanvasPosition(event);
+        const item = findItemAt(point.x, point.y);
 
-    const point = getCanvasPosition(event);
-    const item = findItemAt(point.x, point.y);
+        if (!item) {
+          selectedItem = null;
+          drawDisplay();
+          return;
+        }
 
-    if (!item) {
-        selectedItem = null;
+        selectedItem = item;
+        draggingItem = item;
+
+        dragOffsetX = point.x - item.x;
+        dragOffsetY = point.y - item.y;
+
+        canvas.setPointerCapture(event.pointerId);
         drawDisplay();
-        return;
-    }
+      });
 
-    selectedItem = item;
-    draggingItem = item;
+      canvas.addEventListener("pointermove", (event) => {
+        if (!editMode || !draggingItem) {
+          return;
+        }
 
-    dragOffsetX = point.x - item.x;
-    dragOffsetY = point.y - item.y;
+        const point = getCanvasPosition(event);
 
-    canvas.setPointerCapture(event.pointerId);
-    drawDisplay();
-});
+        draggingItem.x = Math.round(point.x - dragOffsetX);
+        draggingItem.y = Math.round(point.y - dragOffsetY);
 
-canvas.addEventListener("pointermove", event => {
-    if (!editMode || !draggingItem) {
-        return;
-    }
+        statusText.textContent = `${draggingItem.id}: x=${draggingItem.x}, y=${draggingItem.y}`;
 
-    const point = getCanvasPosition(event);
+        drawDisplay();
+      });
 
-    draggingItem.x = Math.round(point.x - dragOffsetX);
-    draggingItem.y = Math.round(point.y - dragOffsetY);
+      canvas.addEventListener("pointerup", (event) => {
+        draggingItem = null;
 
-    statusText.textContent =
-        `${draggingItem.id}: x=${draggingItem.x}, y=${draggingItem.y}`;
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      });
 
-    drawDisplay();
-});
+      function getCanvasPosition(event) {
+        const rectangle = canvas.getBoundingClientRect();
 
-canvas.addEventListener("pointerup", event => {
-    draggingItem = null;
+        return {
+          x:
+            (event.clientX - rectangle.left) * (canvas.width / rectangle.width),
 
-    if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-    }
-});
+          y:
+            (event.clientY - rectangle.top) *
+            (canvas.height / rectangle.height),
+        };
+      }
 
-function getCanvasPosition(event) {
-    const rectangle = canvas.getBoundingClientRect();
+      function findItemAt(x, y) {
+        // Search valves first.
+        for (let i = valveDefinitions.length - 1; i >= 0; i--) {
+          const valve = valveDefinitions[i];
 
-    return {
-        x: (event.clientX - rectangle.left) *
-           (canvas.width / rectangle.width),
+          const distance = Math.hypot(x - valve.x, y - valve.y);
 
-        y: (event.clientY - rectangle.top) *
-           (canvas.height / rectangle.height)
-    };
-}
-
-function findItemAt(x, y) {
-    // Search valves first.
-    for (let i = valveDefinitions.length - 1; i >= 0; i--) {
-        const valve = valveDefinitions[i];
-
-        const distance = Math.hypot(
-            x - valve.x,
-            y - valve.y
-        );
-
-        if (distance <= displayStyle.valveRadius + 15) {
+          if (distance <= displayStyle.valveRadius + 15) {
             return valve;
+          }
         }
-    }
 
-    // Approximate sensor selection area.
-    for (let i = sensorDefinitions.length - 1; i >= 0; i--) {
-        const sensor = sensorDefinitions[i];
+        // Approximate sensor selection area.
+        for (let i = sensorDefinitions.length - 1; i >= 0; i--) {
+          const sensor = sensorDefinitions[i];
 
-        if (
-            Math.abs(x - sensor.x) < 100 &&
-            Math.abs(y - sensor.y) < 25
-        ) {
+          if (Math.abs(x - sensor.x) < 100 && Math.abs(y - sensor.y) < 25) {
             return sensor;
+          }
         }
-    }
 
-    return null;
-}
+        return null;
+      }
 
-// ============================================================
-// COPY UPDATED COORDINATES
-// ============================================================
+      // ============================================================
+      // COPY UPDATED COORDINATES
+      // ============================================================
 
-document
-    .getElementById("copyButton")
-    .addEventListener("click", async () => {
-        const output =
-`const valveDefinitions = ${JSON.stringify(
-    valveDefinitions,
-    null,
-    4
-)};
+      document
+        .getElementById("copyButton")
+        .addEventListener("click", async () => {
+          const output = `const valveDefinitions = ${JSON.stringify(
+            valveDefinitions,
+            null,
+            4,
+          )};
 
-const sensorDefinitions = ${JSON.stringify(
-    sensorDefinitions,
-    null,
-    4
-)};`;
+const sensorDefinitions = ${JSON.stringify(sensorDefinitions, null, 4)};`;
 
-        try {
+          try {
             await navigator.clipboard.writeText(output);
             statusText.textContent = "Positions copied to clipboard";
-        } catch {
+          } catch {
             console.log(output);
             statusText.textContent =
-                "Clipboard blocked; positions printed in console";
-        }
-    });
-</script>
-
-</body>
+              "Clipboard blocked; positions printed in console";
+          }
+        });
+    </script>
+  </body>
 </html>
