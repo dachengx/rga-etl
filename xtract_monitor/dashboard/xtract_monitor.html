@@ -118,7 +118,11 @@
         { id: "PV2113", label: "PV2113", x: 1485, y: 640 },
         { id: "PV2114", label: "PV2114", x: 1875, y: 735 },
         { id: "PV2115", label: "PV2115", x: 2005, y: 828 },
-        { id: "PV2116", label: "PV2116", x: 1485, y: 828 },
+        { id: "PV2116", label: "PV2116", x: 1486, y: 828 },
+      ];
+
+      const pumpDefinitions = [
+        { id: "TP2102", label: "TP2102", x: 1745, y: 735 },
       ];
 
       const sensorDefinitions = [
@@ -190,6 +194,19 @@
         valveLabelColor: "black",
         valveLabelBackground: "rgba(255, 255, 255, 0.5)",
         valveLabelFont: "bold 18px Arial",
+        
+        pumpRadius: 40,
+
+        pumpOnColor: "rgba(0, 220, 80, 0.75)",
+        pumpOffColor: "rgba(255, 40, 40, 0.75)",
+        pumpUnknownColor: "rgba(150, 150, 150, 0.75)",
+
+        pumpBorderColor: "rgba(0, 0, 0, 0.9)",
+        pumpBorderWidth: 3,
+
+        pumpLabelColor: "black",
+        pumpLabelBackground: "rgba(255, 255, 255, 0.5)",
+        pumpLabelFont: "bold 18px Arial",
 
         sensorValueColor: "black",
         sensorBackground: "rgba(255, 255, 255, 0.5)",
@@ -221,6 +238,7 @@
         PV2114: false,
         PV2115: false,
         PV2116: false,
+        TP2102: false,
 
         PT2001Tor: 0.0,
         PT2002Bar: 0.0,
@@ -269,6 +287,10 @@
           drawValve(valve, liveData[valve.id]);
         }
 
+        for (const pump of pumpDefinitions) {
+          drawPump(pump, liveData[pump.id]);
+        }
+
         for (const sensor of sensorDefinitions) {
           drawSensor(sensor, liveData[sensor.id]);
         }
@@ -298,16 +320,32 @@
             : displayStyle.valveBorderColor;
 
         context.stroke();
+      }
 
-        // drawTextBox(
-        //     valve.label,
-        //     valve.x,
-        //     valve.y + displayStyle.valveRadius + 8,
-        //     displayStyle.valveLabelFont,
-        //     displayStyle.valveLabelColor,
-        //     displayStyle.valveLabelBackground,
-        //     "center"
-        // );
+      function drawPump(pump, value) {
+        let color = displayStyle.pumpUnknownColor;
+
+        if (value === true || value === 1) {
+          color = displayStyle.pumpOnColor;
+        } else if (value === false || value === 0) {
+          color = displayStyle.pumpOffColor;
+        }
+
+        context.beginPath();
+        context.arc(pump.x, pump.y, displayStyle.pumpRadius, 0, Math.PI * 2);
+
+        // context.fillStyle = color;
+        // context.fill();
+
+        context.lineWidth =
+          selectedItem === pump ? 5 : displayStyle.pumpBorderWidth;
+
+        context.strokeStyle =
+          selectedItem === pump
+            ? displayStyle.selectedColor
+            : color;
+
+        context.stroke();
       }
 
       function drawSensor(sensor, value) {

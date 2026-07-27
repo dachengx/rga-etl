@@ -1,2 +1,3 @@
 dashboard/*.json
 dashboard/pid.png
+mosquitto/data/mosquitto.db
