@@ -140,7 +140,8 @@
         {
           id: "PT2002Bar",
           // label: "PT2002",
-          unit: "Bar",
+          unit: "mBar",
+          scale: 1000,
           decimals: 2,
           x: 1475,
           y: 400,
@@ -411,13 +412,13 @@
       function drawSensor(sensor, value) {
         let formattedValue = "---";
 
-        const numericValue = Number(value);
+        const numericValue = Number(value) * (sensor.scale ?? 1);
 
         if (Number.isFinite(numericValue)) {
           const absValue = Math.abs(numericValue);
 
           formattedValue =
-            absValue !== 0 && (absValue >= 1e4 || absValue < 1e-4)
+            absValue !== 0 && (absValue >= 1e4 || absValue < 1e-2)
               ? numericValue.toExponential(sensor.decimals)
               : numericValue.toFixed(sensor.decimals);
         }
