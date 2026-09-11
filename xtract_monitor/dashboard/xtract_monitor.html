@@ -122,7 +122,10 @@
       ];
 
       const pumpDefinitions = [
-        { id: "TP2102", label: "TP2102", x: 1745, y: 735 },
+        { id: "TP2001", label: "TP2001", x: 2634, y: 457 },
+        { id: "BP2001", label: "BP2001", x: 2745, y: 457 },
+        { id: "TP2102", label: "TP2102", x: 1746, y: 735 },
+        { id: "BP2102", label: "BP2102", x: 2153, y: 735 },
       ];
 
       const sensorDefinitions = [
@@ -155,15 +158,15 @@
           // label: "PT2104",
           unit: "Tor",
           decimals: 2,
-          x: 1766,
-          y: 843,
+          x: 1585,
+          y: 887,
         },
         {
           id: "MFCFSetSLPM",
           label: "Set",
           unit: "slpm",
           decimals: 2,
-          x: 800,
+          x: 780,
           y: 494,
         },
         {
@@ -171,8 +174,56 @@
           label: "Msr",
           unit: "slpm",
           decimals: 2,
-          x: 800,
+          x: 780,
           y: 534,
+        },
+        {
+          id: "TP2001ActSpd",
+          // label: "Spd",
+          unit: "rpm",
+          decimals: 0,
+          x: 2634,
+          y: 532,
+        },
+        {
+          id: "TP2001DrvCrt",
+          // label: "Crt",
+          unit: "A",
+          decimals: 2,
+          x: 2634,
+          y: 572,
+        },
+        {
+          id: "TP2001TmpMtr",
+          // label: "Tmp",
+          unit: "°C",
+          decimals: 0,
+          x: 2634,
+          y: 612,
+        },
+        {
+          id: "TP2102ActSpd",
+          // label: "Spd",
+          unit: "rpm",
+          decimals: 0,
+          x: 1746,
+          y: 813,
+        },
+        {
+          id: "TP2102DrvCrt",
+          // label: "Crt",
+          unit: "A",
+          decimals: 2,
+          x: 1746,
+          y: 853,
+        },
+        {
+          id: "TP2102TmpMtr",
+          // label: "Tmp",
+          unit: "°C",
+          decimals: 0,
+          x: 1746,
+          y: 893,
         },
       ];
 
@@ -238,6 +289,9 @@
         PV2114: false,
         PV2115: false,
         PV2116: false,
+        BP2001: false,
+        TP2001: false,
+        BP2102: false,
         TP2102: false,
 
         PT2001Tor: 0.0,
@@ -246,6 +300,12 @@
         PT2104Tor: 0.0,
         MFCFSetSLPM: 0.0,
         MFCFMsrSLPM: 0.0,
+        TP2001ActSpd: 0.0,
+        TP2001DrvCrt: 0.0,
+        TP2001TmpMtr: 0.0,
+        TP2102ActSpd: 0.0,
+        TP2102DrvCrt: 0.0,
+        TP2102TmpMtr: 0.0,
       };
 
       const image = document.getElementById("pidImage");
@@ -354,7 +414,12 @@
         const numericValue = Number(value);
 
         if (Number.isFinite(numericValue)) {
-          formattedValue = numericValue.toExponential(sensor.decimals);
+          const absValue = Math.abs(numericValue);
+
+          formattedValue =
+            absValue !== 0 && (absValue >= 1e4 || absValue < 1e-4)
+              ? numericValue.toExponential(sensor.decimals)
+              : numericValue.toFixed(sensor.decimals);
         }
 
         const text =
@@ -431,6 +496,15 @@
           ...newData,
         };
 
+        // Pumps don't have a direct on/off flag; infer it from drive current.
+        for (const pump of pumpDefinitions) {
+          const driveCurrent = Number(liveData[`${pump.id}DrvCrt`]);
+
+          if (Number.isFinite(driveCurrent)) {
+            liveData[pump.id] = driveCurrent > 0;
+          }
+        }
+
         drawDisplay();
 
         statusText.textContent =
@@ -457,11 +531,14 @@
           // Timestamp prevents the browser from returning cached JSON.
           const cacheBuster = Date.now();
 
-          const [pvResponse, sensorResponse] = await Promise.all([
+          const [pvResponse, sensorResponse, bptpResponse] = await Promise.all([
             fetch(`pv_status.json?t=${cacheBuster}`, {
               cache: "no-store",
             }),
             fetch(`sensor_status.json?t=${cacheBuster}`, {
+              cache: "no-store",
+            }),
+            fetch(`bptp_status.json?t=${cacheBuster}`, {
               cache: "no-store",
             }),
           ]);
@@ -476,13 +553,19 @@
             );
           }
 
+          if (!bptpResponse.ok) {
+            throw new Error(`bptp_status.json: HTTP ${bptpResponse.status}`);
+          }
+
           const pvData = await pvResponse.json();
           const sensorData = await sensorResponse.json();
+          const bptpData = await bptpResponse.json();
 
-          // Combine the two dictionaries.
+          // Combine the three dictionaries.
           updateDisplay({
             ...pvData,
             ...sensorData,
+            ...bptpData,
           });
 
           statusText.textContent =
@@ -632,6 +715,17 @@
           }
         }
 
+        // Search pumps next.
+        for (let i = pumpDefinitions.length - 1; i >= 0; i--) {
+          const pump = pumpDefinitions[i];
+
+          const distance = Math.hypot(x - pump.x, y - pump.y);
+
+          if (distance <= displayStyle.pumpRadius + 15) {
+            return pump;
+          }
+        }
+
         // Approximate sensor selection area.
         for (let i = sensorDefinitions.length - 1; i >= 0; i--) {
           const sensor = sensorDefinitions[i];
@@ -656,6 +750,8 @@
             null,
             4,
           )};
+
+const pumpDefinitions = ${JSON.stringify(pumpDefinitions, null, 4)};
 
 const sensorDefinitions = ${JSON.stringify(sensorDefinitions, null, 4)};`;
 

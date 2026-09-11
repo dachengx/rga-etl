@@ -5,10 +5,10 @@ import os
 # MQTT broker configuration
 BROKER = "169.254.1.106"
 PORT = 1883
-TOPICS = ["XTRACT/PV", "XTRACT/SENSOR"]
+TOPICS = ["XTRACT/PV", "XTRACT/SENSOR", "XTRACT/BPTP"]
 
 # Status storage
-status: dict[str, dict] = {"XTRACT/PV": {}, "XTRACT/SENSOR": {}}
+status: dict[str, dict] = {"XTRACT/PV": {}, "XTRACT/SENSOR": {}, "XTRACT/BPTP": {}}
 
 
 def on_connect(client, userdata, flags, rc):
@@ -26,6 +26,8 @@ def save_status_to_file(topic, data):
         filename = "/app/data/pv_status.json"
     elif topic == "XTRACT/SENSOR":
         filename = "/app/data/sensor_status.json"
+    elif topic == "XTRACT/BPTP":
+        filename = "/app/data/bptp_status.json"
     else:
         return
 
@@ -52,6 +54,9 @@ def on_message(client, userdata, msg):
         elif msg.topic == "XTRACT/SENSOR":
             status["XTRACT/SENSOR"] = data_dict
             save_status_to_file("XTRACT/SENSOR", data_dict)
+        elif msg.topic == "XTRACT/BPTP":
+            status["XTRACT/BPTP"] = data_dict
+            save_status_to_file("XTRACT/BPTP", data_dict)
 
     except json.JSONDecodeError:
         print(f"Failed to decode JSON from {msg.topic}")
