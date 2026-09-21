@@ -246,7 +246,7 @@
         valveLabelColor: "black",
         valveLabelBackground: "rgba(255, 255, 255, 0.5)",
         valveLabelFont: "bold 18px Arial",
-        
+
         pumpRadius: 40,
 
         pumpOnColor: "rgba(0, 220, 80, 0.75)",
@@ -402,9 +402,7 @@
           selectedItem === pump ? 5 : displayStyle.pumpBorderWidth;
 
         context.strokeStyle =
-          selectedItem === pump
-            ? displayStyle.selectedColor
-            : color;
+          selectedItem === pump ? displayStyle.selectedColor : color;
 
         context.stroke();
       }
