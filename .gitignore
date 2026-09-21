@@ -1,6 +1,7 @@
 *.dat
 rga-mysql
 __pycache__
+.ipynb_checkpoints
 *.csv
 *.txt
 *.dlo
