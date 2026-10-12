@@ -49,8 +49,8 @@
       }
 
       /*
-       The overlay coordinate system is based on the original
-       pixel dimensions of pid.png.
+       The overlay coordinate system is the reference size set in
+       the script (referenceSize), not the pixel size of pid.png.
     */
       #pidContainer {
         position: relative;
@@ -88,7 +88,7 @@
 
     <div id="viewport">
       <div id="pidContainer">
-        <img id="pidImage" src="pid.png" alt="PID diagram" />
+        <img id="pidImage" alt="PID diagram" />
         <canvas id="overlayCanvas"></canvas>
       </div>
     </div>
@@ -97,35 +97,44 @@
       // ============================================================
       // POSITION CONFIGURATION
       //
-      // x and y are pixel coordinates in the ORIGINAL pid.png.
-      // These coordinates do not depend on the monitor resolution.
+      // x and y are coordinates in the reference size below. They do
+      // not depend on the monitor resolution or on the pixel size of
+      // pid.png, so pid.png can be re-exported at any resolution.
+      //
+      // Positions only need updating if the drawing itself changes
+      // (symbols moved, or a different crop/margin).
+      //
+      // A sensor box is centered on x and starts at y. With
+      // align: "left", x is the left edge of the box instead.
       //
       // Change x and y here, or turn on "Edit positions" and drag
       // the indicators with the mouse.
       // ============================================================
 
+      const referenceSize = { width: 1492, height: 581 };
+
       const valveDefinitions = [
-        { id: "PV2001", label: "PV2001", x: 245, y: 459 },
-        { id: "PV2002", label: "PV2002", x: 375, y: 587 },
-        { id: "PV2003", label: "PV2003", x: 578, y: 459 },
-        { id: "PV2004", label: "PV2004", x: 578, y: 348 },
-        { id: "PV2005", label: "PV2005", x: 1023, y: 459 },
-        { id: "PV2006", label: "PV2006", x: 2170, y: 459 },
-        { id: "PV2009", label: "PV2009", x: 1375, y: 232 },
-        { id: "PV2010", label: "PV2010", x: 245, y: 348 },
-        { id: "PV2011", label: "PV2011", x: 1265, y: 232 },
-        { id: "PV2112", label: "PV2112", x: 2005, y: 640 },
-        { id: "PV2113", label: "PV2113", x: 1485, y: 640 },
-        { id: "PV2114", label: "PV2114", x: 1875, y: 735 },
-        { id: "PV2115", label: "PV2115", x: 2005, y: 828 },
-        { id: "PV2116", label: "PV2116", x: 1486, y: 828 },
+        { id: "PV2001", label: "PV2001", x: 120.25, y: 270.25 },
+        { id: "PV2002", label: "PV2002", x: 190.25, y: 340.25 },
+        { id: "PV2003", label: "PV2003", x: 300.25, y: 270.25 },
+        { id: "PV2004", label: "PV2004", x: 300.25, y: 210.25 },
+        { id: "PV2005", label: "PV2005", x: 540.25, y: 270.25 },
+        { id: "PV2006", label: "PV2006", x: 1160.25, y: 270.25 },
+        { id: "PV2009", label: "PV2009", x: 730.25, y: 150.25 },
+        { id: "PV2010", label: "PV2010", x: 120.25, y: 210.25 },
+        { id: "PV2011", label: "PV2011", x: 670.25, y: 150.25 },
+        { id: "PV2112", label: "PV2112", x: 1070.25, y: 370.25 },
+        { id: "PV2113", label: "PV2113", x: 790.25, y: 370.25 },
+        { id: "PV2114", label: "PV2114", x: 1000.25, y: 420.25 },
+        { id: "PV2115", label: "PV2115", x: 1070.25, y: 470.25 },
+        { id: "PV2116", label: "PV2116", x: 790.25, y: 470.25 },
       ];
 
       const pumpDefinitions = [
-        { id: "TP2001", label: "TP2001", x: 2634, y: 457 },
-        { id: "BP2001", label: "BP2001", x: 2745, y: 457 },
-        { id: "TP2102", label: "TP2102", x: 1746, y: 735 },
-        { id: "BP2102", label: "BP2102", x: 2153, y: 735 },
+        { id: "TP2001", label: "TP2001", x: 1410.5, y: 270.5 },
+        { id: "BP2001", label: "BP2001", x: 1470.5, y: 270.5 },
+        { id: "TP2102", label: "TP2102", x: 930.5, y: 420.5 },
+        { id: "BP2102", label: "BP2102", x: 1150.5, y: 420.5 },
       ];
 
       const sensorDefinitions = [
@@ -134,8 +143,8 @@
           // label: "PT2001",
           unit: "Tor",
           decimals: 0,
-          x: 375,
-          y: 158,
+          x: 190.25,
+          y: 108,
         },
         {
           id: "PT2002Bar",
@@ -143,127 +152,129 @@
           unit: "mBar",
           scale: 1000,
           decimals: 0,
-          x: 1475,
-          y: 400,
+          x: 780.25,
+          y: 241,
         },
         {
           id: "PT2003Tor",
           // label: "PT2003",
           unit: "Tor",
           decimals: 2,
-          x: 2410,
-          y: 232,
+          x: 1290.25,
+          y: 148,
         },
         {
           id: "PT2104Tor",
           // label: "PT2104",
           unit: "Tor",
           decimals: 2,
-          x: 1585,
-          y: 887,
+          x: 844,
+          y: 501,
         },
         {
           id: "MFCFSetSLPM",
           label: "Set",
           unit: "slpm",
           decimals: 2,
-          x: 780,
-          y: 494,
+          align: "left",
+          x: 350,
+          y: 291,
         },
         {
           id: "MFCFMsrSLPM",
           label: "Msr",
           unit: "slpm",
           decimals: 2,
-          x: 780,
-          y: 534,
+          align: "left",
+          x: 350,
+          y: 313,
         },
         {
           id: "TP2001ActSpd",
           // label: "Spd",
           unit: "rpm",
           decimals: 0,
-          x: 2634,
-          y: 532,
+          x: 1410.5,
+          y: 311,
         },
         {
           id: "TP2001DrvCrt",
           // label: "Crt",
           unit: "A",
           decimals: 2,
-          x: 2634,
-          y: 572,
+          x: 1410.5,
+          y: 333,
         },
         {
           id: "TP2001TmpMtr",
           // label: "Tmp",
           unit: "°C",
           decimals: 0,
-          x: 2634,
-          y: 612,
+          x: 1410.5,
+          y: 355,
         },
         {
           id: "TP2102ActSpd",
           // label: "Spd",
           unit: "rpm",
           decimals: 0,
-          x: 1746,
-          y: 813,
+          x: 930.5,
+          y: 461,
         },
         {
           id: "TP2102DrvCrt",
           // label: "Crt",
           unit: "A",
           decimals: 2,
-          x: 1746,
-          y: 853,
+          x: 930.5,
+          y: 483,
         },
         {
           id: "TP2102TmpMtr",
           // label: "Tmp",
           unit: "°C",
           decimals: 0,
-          x: 1746,
-          y: 893,
+          x: 930.5,
+          y: 505,
         },
       ];
 
       // ============================================================
       // APPEARANCE
-      // Sizes are in original-image pixels, so they scale with pid.png.
+      // Sizes are in reference-size units, so they scale with pid.png.
       // ============================================================
 
       const displayStyle = {
-        valveRadius: 40,
+        valveRadius: 22,
 
         valveOnColor: "rgba(0, 220, 80, 0.75)",
         valveOffColor: "rgba(255, 40, 40, 0.75)",
         valveUnknownColor: "rgba(150, 150, 150, 0.75)",
 
         valveBorderColor: "rgba(0, 0, 0, 0.9)",
-        valveBorderWidth: 3,
+        valveBorderWidth: 2,
 
         valveLabelColor: "black",
         valveLabelBackground: "rgba(255, 255, 255, 0.5)",
-        valveLabelFont: "bold 18px Arial",
+        valveLabelFont: "bold 10px Arial",
 
-        pumpRadius: 40,
+        pumpRadius: 22,
 
         pumpOnColor: "rgba(0, 220, 80, 0.75)",
         pumpOffColor: "rgba(255, 40, 40, 0.75)",
         pumpUnknownColor: "rgba(150, 150, 150, 0.75)",
 
         pumpBorderColor: "rgba(0, 0, 0, 0.9)",
-        pumpBorderWidth: 3,
+        pumpBorderWidth: 2,
 
         pumpLabelColor: "black",
         pumpLabelBackground: "rgba(255, 255, 255, 0.5)",
-        pumpLabelFont: "bold 18px Arial",
+        pumpLabelFont: "bold 10px Arial",
 
         sensorValueColor: "black",
         sensorBackground: "rgba(255, 255, 255, 0.5)",
         sensorBorderColor: "rgba(0, 0, 0, 0.8)",
-        sensorFont: "bold 30px Arial",
+        sensorFont: "bold 16px Arial",
 
         selectedColor: "#00aaff",
       };
@@ -322,27 +333,64 @@
       let dragOffsetX = 0;
       let dragOffsetY = 0;
 
+      // true: refit when the window is resized. false after "Actual size".
+      let autoFit = true;
+
       // ============================================================
       // INITIALIZATION
       // ============================================================
 
       image.addEventListener("load", () => {
-        // Canvas coordinates exactly match original pid.png coordinates.
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-
         fitToScreen();
-        drawDisplay();
+        resizeCanvas();
 
-        statusText.textContent = `Image: ${image.naturalWidth} × ${image.naturalHeight}`;
+        const imageRatio = image.naturalWidth / image.naturalHeight;
+        const referenceRatio = referenceSize.width / referenceSize.height;
+
+        statusText.textContent =
+          Math.abs(imageRatio / referenceRatio - 1) > 0.01
+            ? `pid.png aspect ratio changed (${image.naturalWidth} × ${image.naturalHeight}); positions may be off`
+            : `Image: ${image.naturalWidth} × ${image.naturalHeight}`;
       });
+
+      // Match the canvas resolution to its on-screen size and map the
+      // reference coordinates onto it, so the overlay stays sharp and
+      // aligned at any image resolution or zoom.
+      function resizeCanvas() {
+        const rectangle = canvas.getBoundingClientRect();
+
+        if (!rectangle.width || !rectangle.height) {
+          return;
+        }
+
+        const pixelRatio = window.devicePixelRatio || 1;
+
+        canvas.width = Math.round(rectangle.width * pixelRatio);
+        canvas.height = Math.round(rectangle.height * pixelRatio);
+
+        context.setTransform(
+          canvas.width / referenceSize.width,
+          0,
+          0,
+          canvas.height / referenceSize.height,
+          0,
+          0,
+        );
+
+        drawDisplay();
+      }
+
+      new ResizeObserver(resizeCanvas).observe(container);
+
+      // Cache-busting query so an updated pid.png is always picked up.
+      image.src = `pid.png?v=${Date.now()}`;
 
       // ============================================================
       // DRAWING
       // ============================================================
 
       function drawDisplay() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.clearRect(0, 0, referenceSize.width, referenceSize.height);
 
         for (const valve of valveDefinitions) {
           drawValve(valve, liveData[valve.id]);
@@ -373,7 +421,7 @@
         context.fill();
 
         context.lineWidth =
-          selectedItem === valve ? 5 : displayStyle.valveBorderWidth;
+          selectedItem === valve ? 3 : displayStyle.valveBorderWidth;
 
         context.strokeStyle =
           selectedItem === valve
@@ -399,7 +447,7 @@
         // context.fill();
 
         context.lineWidth =
-          selectedItem === pump ? 5 : displayStyle.pumpBorderWidth;
+          selectedItem === pump ? 3 : displayStyle.pumpBorderWidth;
 
         context.strokeStyle =
           selectedItem === pump ? displayStyle.selectedColor : color;
@@ -433,7 +481,7 @@
           displayStyle.sensorFont,
           displayStyle.sensorValueColor,
           displayStyle.sensorBackground,
-          "center",
+          sensor.align ?? "center",
           selectedItem === sensor
             ? displayStyle.selectedColor
             : displayStyle.sensorBorderColor,
@@ -450,15 +498,15 @@
         alignment = "center",
         borderColor = "rgba(0, 0, 0, 0.8)",
       ) {
-        const paddingX = 8;
-        const paddingY = 5;
+        const paddingX = 4;
+        const paddingY = 3;
 
         context.font = font;
         context.textBaseline = "top";
 
         const textWidth = context.measureText(text).width;
         const boxWidth = textWidth + 2 * paddingX;
-        const boxHeight = 40;
+        const boxHeight = 22;
 
         let boxX = x;
 
@@ -469,7 +517,7 @@
         context.fillStyle = backgroundColor;
         context.fillRect(boxX, y, boxWidth, boxHeight);
 
-        context.lineWidth = 2;
+        context.lineWidth = 1;
         context.strokeStyle = borderColor;
         context.strokeRect(boxX, y, boxWidth, boxHeight);
 
@@ -596,16 +644,20 @@
         const availableWidth = viewport.clientWidth - 20;
         const availableHeight = viewport.clientHeight - 20;
 
+        // Scale up or down so the whole image fills the window.
         const scale = Math.min(
           availableWidth / image.naturalWidth,
           availableHeight / image.naturalHeight,
-          1,
         );
 
+        autoFit = true;
+        container.style.maxWidth = "";
         container.style.width = `${Math.round(image.naturalWidth * scale)}px`;
       }
 
       function showActualSize() {
+        autoFit = false;
+        container.style.maxWidth = "none";
         container.style.width = `${image.naturalWidth}px`;
       }
 
@@ -618,8 +670,9 @@
         .addEventListener("click", showActualSize);
 
       window.addEventListener("resize", () => {
-        // Uncomment this if you always want automatic refitting:
-        // fitToScreen();
+        if (autoFit) {
+          fitToScreen();
+        }
       });
 
       // ============================================================
@@ -694,11 +747,12 @@
 
         return {
           x:
-            (event.clientX - rectangle.left) * (canvas.width / rectangle.width),
+            (event.clientX - rectangle.left) *
+            (referenceSize.width / rectangle.width),
 
           y:
             (event.clientY - rectangle.top) *
-            (canvas.height / rectangle.height),
+            (referenceSize.height / rectangle.height),
         };
       }
 
@@ -709,7 +763,7 @@
 
           const distance = Math.hypot(x - valve.x, y - valve.y);
 
-          if (distance <= displayStyle.valveRadius + 15) {
+          if (distance <= displayStyle.valveRadius + 8) {
             return valve;
           }
         }
@@ -720,7 +774,7 @@
 
           const distance = Math.hypot(x - pump.x, y - pump.y);
 
-          if (distance <= displayStyle.pumpRadius + 15) {
+          if (distance <= displayStyle.pumpRadius + 8) {
             return pump;
           }
         }
@@ -729,7 +783,7 @@
         for (let i = sensorDefinitions.length - 1; i >= 0; i--) {
           const sensor = sensorDefinitions[i];
 
-          if (Math.abs(x - sensor.x) < 100 && Math.abs(y - sensor.y) < 25) {
+          if (Math.abs(x - sensor.x) < 54 && Math.abs(y - sensor.y) < 14) {
             return sensor;
           }
         }
