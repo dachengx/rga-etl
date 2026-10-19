@@ -4,7 +4,5 @@ __pycache__
 .ipynb_checkpoints
 *.csv
 *.txt
-*.dlo
-*.wsp
 *.log
 .claude
