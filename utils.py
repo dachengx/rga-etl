@@ -187,9 +187,7 @@ def get_t0(
     return t0
 
 
-def get_integral(x, y):
-    xmin, xmax = -10, 250
-
+def get_integral(x, y, xmin=-10, xmax=250):
     mask = (x > xmin) & (x < xmax)
     
     xx = np.r_[xmin, x[mask], xmax]
