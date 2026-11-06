@@ -1,0 +1,130 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{RGA Krypton Measurement Uncertainties and Sensitivity}
+\author{Dacheng Xu}
+\date{November 2025}
+
+\begin{document}
+
+\maketitle
+
+This document discusses the uncertainties of concentration and partial pressure measurements of Krypton, and also the sensitivity calculation proposal. The uncertainties of concentration and partial pressure measurements can be modified for our purpose.
+
+\section{Uncertainties of Partial Pressure}
+
+Contents are collected from the 2023 thesis \textit{Identification of Trace Krypton in the LUX-ZEPLIN Dark Matter Search}, mainly Section 4.6.2, and 2018 thesis \textit{Purity Monitoring Techniques and Electronic Energy Deposition Properties in Liquid Xenon Time Projection Chambers}, mainly Section 3.4.
+
+The partial pressure of Krypton is the difference of the averaged RGA partial pressure $P_\mathrm{flw}(A)$(taken within $[t_3, t_4]$) and the averaged RGA background pressure $P_\mathrm{bkg}(A)$ (taken within $[t_1, t_2]$).
+
+\begin{align}
+    P_\mathrm{flw}(A) &= \frac{1}{t_3 - t_4}\sum_{i = 1}^{N_\mathrm{flw} - 1} \frac{1}{2} [p_i(A) - p_i(87) + p_{i+1}(A) - p_{i+1}(87)]\cdot \Delta t_i \\
+    P_\mathrm{bkg}(A) &= \frac{1}{t_2 - t_1}\sum_{j = 1}^{N_\mathrm{bkg} - 1} \frac{1}{2} [p_j(A) - p_j(87) + p_{j+1}(A) - p_{j+1}(87)]\cdot \Delta t_j \\
+    P_\mathrm{sample}(A) &= P_\mathrm{flw}(A) - P_\mathrm{bkg}(A)
+\end{align}
+
+For data point $p_i(A)$, its uncertainty can be estimated as $\sigma_i$,
+
+\begin{equation}
+    \sigma_i(A) = \sigma_\mathrm{bkg} [1 + (p_i(A) - p_i(87)) \cdot c]
+\end{equation},
+
+where $\sigma_\mathrm{bkg}$ is the observed spread of $p_j(A) - p_j(87)$, and $c$ is reported to be $0.009 \mathrm{pTorr}^{-1}$.
+
+The uncertainty of $P_\mathrm{sample}(A)$ is $\sigma_\mathrm{sample}(A)$, roughly
+
+\begin{align}
+    \sigma_\mathrm{sample}(A) &= \frac{1}{t_3 - t_4}\sqrt{\sum_{i = 1}^{N_\mathrm{flw}}(\sigma_i^2 + \sigma_\mathrm{bkg}^2 / N_\mathrm{bkg})\Delta t_i^2} \\
+    &\approx \sigma_\mathrm{bkg}\sqrt{\frac{[1 +  P_\mathrm{flw}(A) \cdot c]^2 + 1 / N_\mathrm{bkg}}{N_\mathrm{flw}}}
+\end{align}.
+
+The last approximation is made when the true partial pressure is static within $[t_1, t_2]$ and all $\Delta t_j$ are the same (equally binned, $(t_4 - t_3) / N_\mathrm{flw}$).
+
+We do not have to discuss $\sigma_j$ because the background fluctuation is assumed to be constant in time.k
+
+\section{Proposal of Sensitivity Calculation}
+
+This section is inspired by the 2018 thesis \textit{Purity Monitoring Techniques and Electronic Energy Deposition Properties in Liquid Xenon Time Projection Chambers}, mainly Section 3.7.3.
+
+We can get the concentrations of Xenon \& Krypton mixture $\{C_i\}$ and the averaged partial pressure (background already cut off) $\{P_i\}$, and also the uncertainty of the concentrations and pressures, $(\sigma_i^C, \sigma_i^P)$. The \href{https://www.mechanicalkern.com/static/odr_ams.pdf}{orthogonal distance regression (ODR)} will be performed numerically to determine the two coefficients and their uncertainty, $C = k\cdot P + b$.
+
+The limit of sensitivity will be defined as the concentration at which 90\% of analyses will produce results greater than one STD above 0 ppq. More specifically, the sensitivity limit $C_T$ is so small that the corresponding measured $P_T$ has a 10\% chance of providing a $\pm\sigma$ confidence interval covering 0 ppq. The confidence interval of $C_T$ is
+
+\begin{align}
+    \sigma_T &= \sqrt{\sigma_k^2 P_T^2 + \sigma_P^2 k^2 + \sigma_b^2} \\
+    &= \sqrt{\sigma_k^2 (\frac{C_T - b}{k})^2 + \sigma_P^2 k^2 + \sigma_b^2} \\
+    &\approx \sqrt{\sigma_k^2 (\frac{C_T - b}{k})^2 + \sigma_\mathrm{bkg}^2\frac{[1 + c \cdot (C_T - b) / k]^2 + 1 / N_\mathrm{bkg}}{N_\mathrm{flw}} k^2 + \sigma_b^2}
+\end{align},
+
+where the correlation between $k$ and $b$ in the fitting is ignored.
+
+If the uncertainties $\sigma_k$ and $\sigma_b$ are minimized by increasing the number of calibration data points and the background partial pressure is low enough,
+
+\begin{equation}
+    \sigma_T \approx \sigma_\mathrm{bkg}\sqrt{\frac{[k +  c \cdot (C_T - b)]^2 + k^2 / N_\mathrm{bkg}}{N_\mathrm{flw}}}
+\end{equation}.
+
+Lowering $\sigma_\mathrm{bkg}$ and $k$ will improve sensitivity.
+
+The measured concentration should be larger than $1.28\sigma_T$ to ensure 90\% of analyses produce results greater than one STD above 0 ppq.
+
+\section{Uncertainties of Concentration}
+
+This section discusses the uncertainties of individual Krypton concentration (in units of ppt or ppq) measurements.
+
+\textcolor{red}{It is a bit weird that, at least in the 2025 thesis, the uncertainty of concentration is not propagated from the uncertainty of partial pressure measurement or the uncertainty of the coefficients of calibration.}
+
+Contents are collected from the 2025 thesis \textit{Measurement of Dissolved Beta Decay Sources in the LUX-ZEPLIN Experiment}, mainly Section 3.7.
+
+\begin{center}
+{\footnotesize
+\begin{tabular}{|c|c|c|c|c|c|c|} 
+  \hline
+  \multirow{3}{*}{} & \multicolumn{3}{|c|}{MSS} & \multicolumn{3}{|c|}{SSS} \\ 
+  \cline{2-7}
+   & High & \multicolumn{2}{|c|}{Ultra-High} & High & \multicolumn{2}{|c|}{Ultra-High} \\ 
+  \cline{2-7}
+   & Fractional & Absolute & Fractional & Fractional & Absolute & Fractional \\ 
+  \hline
+  Statistical & 10\% & 6ppq & 3\% & 10\% & 30ppq & 5\% \\ 
+  \hline
+  Systematic & 20\% & 0 & 15\% & 20\% & 0 & 15\% \\ 
+  \hline
+\end{tabular}
+}
+\end{center}
+
+Sources of statistical error are RGA noise and statistical error in MFC regulation, etc. The statistical uncertainty is determined empirically. The uncertainty due to calibration is the dominant systematic uncertainty. Other possible sources of systematic error include, but are not limited to, incomplete pumpouts during calibrations, variation in ice formation, recent history of the RGA filament and plumbing, MFC offsets and nonlinearities, procedural errors, and other RGA  systematics.
+
+The quoted statistical error on a measurement $\sigma_\mathrm{stat}$ is
+
+\begin{equation}
+    \sigma_\mathrm{stat} = \sqrt{(\sigma_\mathrm{stat}^\mathrm{abs})^2 + (\sigma_\mathrm{stat}^\mathrm{frac} \cdot C)^2}
+\end{equation}.
+
+For MSS ultra-high sensitivity measurement, $\sigma_\mathrm{stat}^\mathrm{frac} = 3\%$ is from the cold gas circulation Kr measurements. In Figure 3.16, a 3\% error on the measured Kr concentration gives a p-value of 0.51. For SSS ultra-high sensitivity measurement, $\sigma_\mathrm{stat}^\mathrm{frac} = 5\%$ is determined by mixing a large batch of calibration Xe and repeatedly measuring the batch.
+
+For SSS high-sensitivity measurement, $\sigma_\mathrm{stat}^\mathrm{frac} = 10\%$ is estimated by SSS He measurements shown in Figure 3.20. The He measurements in the measurement period averaged 95.7 ppt with a STD of 9.5 ppt.
+
+For MSS ultra-high sensitivity measurement, $\sigma_\mathrm{stat}^\mathrm{abs} = 6 \mathrm{ppq}$ is from the repeated measurements of Xe with undetectable levels of Kr.
+
+The quoted systematic error on a measurement $\sigma_\mathrm{stat}$ is
+
+\begin{equation}
+    \sigma_\mathrm{sys} = \sigma_\mathrm{sys}^\mathrm{frac} \cdot C
+\end{equation}.
+
+The paper did not provide a detailed reasoning for the choice of $\sigma_\mathrm{stat}$. For ultra-high sensitivity measurements, $\sigma_\mathrm{stat} = 15\%$.
+
+The uncertainty of an individual measurement when the concentration is $C$ will be associated with the uncertainty $\sigma_C$
+
+\begin{align}
+    \sigma_C &= \sqrt{\sigma_\mathrm{stat}^2 + \sigma_\mathrm{sys}^2} \\
+    &= \sqrt{(\sigma_\mathrm{stat}^\mathrm{abs})^2 + (\sigma_\mathrm{stat}^\mathrm{frac} \cdot C)^2 + (\sigma_\mathrm{sys}^\mathrm{frac} \cdot C)^2}
+\end{align}.
+
+\end{document}
