@@ -1,0 +1,133 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\definecolor{light}{HTML}{EDF2F7}
+\newtcolorbox{keyidea}{
+    colback=light,
+    colframe=light,
+    boxrule=0pt,
+    arc=2pt,
+    left=9pt, right=9pt,
+    top=7pt, bottom=7pt
+}
+
+
+\title{RGA Krypton Measurement Uncertainties and Sensitivity}
+\author{Dacheng Xu}
+\date{November 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Uncertainty of Partial Pressure}
+
+The pressure-versus-time data collected when the RGA is exposed only to the ice primer use the subscript $_\mathrm{bkg}$, while the data collected when the MFC is running and xenon is freezing use the subscript $_\mathrm{flw}$. The assumptions are shown in blue boxes.
+
+\begin{keyidea}
+    The time intervals between successive groups of AMU measurements are equal.
+\end{keyidea}
+
+The background and flow runs contain $N_\mathrm{bkg}$ and $N_\mathrm{flw}$ measurements, respectively. Let $\Delta p_k(A) = p_k(A) - p_k(87)$ be the reference-subtracted partial pressure for measurement group $k$.
+
+The average reference-subtracted partial pressures are
+\begin{align}
+    P_\mathrm{flw}(A) &= \frac{1}{N_\mathrm{flw}}\sum_{i=0}^{N_\mathrm{flw}-1}\Delta p_i(A), \\
+    P_\mathrm{bkg}(A) &= \frac{1}{N_\mathrm{bkg}}\sum_{j=0}^{N_\mathrm{bkg}-1}\Delta p_j(A).
+\end{align}
+
+We define the sample partial pressure as
+\begin{align}
+    P_\mathrm{sample}(A) &= P_\mathrm{flw}(A) - P_\mathrm{bkg}(A).
+\end{align}
+We assume that $P_\mathrm{sample}(A)$ is a linear function of the true concentration.
+
+\begin{keyidea}
+    Let $\sigma_k(A)$ be the standard deviation of the raw reading $p_k(A)$ and $\sigma_0$ that of the raw reference reading $p_k(87)$. We model $\sigma_k(A)$ as an affine function of $\Delta p_k(A)$.
+    \begin{align}
+        \sigma_k(A) &= \sigma_0\left[1 + c \Delta p_k(A)\right].
+    \end{align}
+    The reference-channel standard deviation is constant within each run, with values $\sigma_{0,\mathrm{flw}}$ and $\sigma_{0,\mathrm{bkg}}$. We assume a common coefficient $c$ for both runs and estimate it from the background run.
+    We assume that the two channel readings in each group are uncorrelated and that readings from distinct groups are uncorrelated, including across runs.
+\end{keyidea}
+
+The variances of $P_\mathrm{flw}(A)$ and $P_\mathrm{bkg}(A)$ are
+\begin{align}
+    \sigma^2_{P_\mathrm{flw}(A)} &= \frac{1}{N_\mathrm{flw}^2}\sum_{i=0}^{N_\mathrm{flw}-1}
+        \sigma_i^2(A) + \frac{\sigma^2_{0,\mathrm{flw}}}{N_\mathrm{flw}}, \\
+    \sigma^2_{P_\mathrm{bkg}(A)} &= \frac{1}{N_\mathrm{bkg}^2}\sum_{j=0}^{N_\mathrm{bkg}-1}
+        \sigma_j^2(A) + \frac{\sigma^2_{0,\mathrm{bkg}}}{N_\mathrm{bkg}}.
+\end{align}
+
+The variance of $P_\mathrm{sample}(A)$ is
+\begin{align}
+    \sigma^2_{P_\mathrm{sample}(A)} &= \sigma^2_{P_\mathrm{flw}(A)} + \sigma^2_{P_\mathrm{bkg}(A)}.
+\end{align}
+
+\begin{keyidea}
+    During the background run, assume that $\Delta p_j(A)$ stays close to $P_\mathrm{bkg}(A)$, so
+    \begin{align}
+        \sigma_j(A) &\approx \sigma_{0,\mathrm{bkg}}\left[1 + c P_\mathrm{bkg}(A)\right].
+    \end{align}
+\end{keyidea}
+
+The background contribution is then
+\begin{align}
+    \sigma^2_{P_\mathrm{bkg}(A)} &\approx \frac{\sigma^2_{0,\mathrm{bkg}}}{N_\mathrm{bkg}}
+        \left\{1 + \left[1 + c P_\mathrm{bkg}(A)\right]^2\right\}.
+\end{align}
+
+The flow contribution can be approximated in two limits.
+
+\subsection{Low Concentration}
+
+\begin{keyidea}
+    In the low-concentration limit, assume that $\lvert c\Delta p_i(A)\rvert \ll 1$ throughout the flow run.
+    \begin{align}
+        \sigma_i^2(A) &= \sigma^2_{0,\mathrm{flw}}\left[1 + c\Delta p_i(A)\right]^2 \\
+        &\approx \sigma^2_{0,\mathrm{flw}}\left[1 + 2c\Delta p_i(A)\right].
+    \end{align}
+\end{keyidea}
+
+Thus,
+\begin{align}
+    \sigma^2_{P_\mathrm{sample}(A)} &\approx \frac{\sigma^2_{0,\mathrm{flw}}}{N_\mathrm{flw}}
+        \left[2 + 2cP_\mathrm{flw}(A)\right] + \sigma^2_{P_\mathrm{bkg}(A)}.
+\end{align}
+
+\subsection{High Concentration}
+
+\begin{keyidea}
+    In the high-concentration limit, assume that $c\Delta p_i(A) \gg 1$ throughout the flow run.
+    \begin{align}
+        \sigma_i^2(A) &= \sigma^2_{0,\mathrm{flw}}\left[1 + c\Delta p_i(A)\right]^2 \\
+        &\approx \sigma^2_{0,\mathrm{flw}} c^2\Delta p_i(A)^2.
+    \end{align}
+\end{keyidea}
+
+In this limit, the flow-run reference-channel variance is negligible compared with the pressure-dependent term, so
+\begin{align}
+    \sigma^2_{P_\mathrm{sample}(A)} &\approx \frac{\sigma^2_{0,\mathrm{flw}}c^2}{N_\mathrm{flw}^2}
+        \sum_{i=0}^{N_\mathrm{flw}-1}\Delta p_i(A)^2 + \sigma^2_{P_\mathrm{bkg}(A)}.
+\end{align}
+If $\Delta p_i(A)\approx P_\mathrm{flw}(A)$ throughout the flow run, this simplifies to
+\begin{align}
+    \sigma^2_{P_\mathrm{sample}(A)} &\approx \frac{\sigma^2_{0,\mathrm{flw}}c^2P^2_\mathrm{flw}(A)}{N_\mathrm{flw}}
+        + \sigma^2_{P_\mathrm{bkg}(A)}.
+\end{align}
+
+We estimate $\sigma_{0,\mathrm{flw}}$ and $\sigma_{0,\mathrm{bkg}}$
+using the sample standard deviations of $p_i(87)$ and $p_j(87)$,
+respectively. Let $\sigma_\mathrm{bkg}(A)$ denote the sample standard
+deviation of the raw background readings $p_j(A)$. For
+$P_\mathrm{bkg}(A) \ne 0$, we estimate $c$ as
+\begin{align}
+    c &= \frac{\sigma_\mathrm{bkg}(A)/\sigma_{0,\mathrm{bkg}} - 1}{P_\mathrm{bkg}(A)}.
+\end{align}
+
+\end{document}
