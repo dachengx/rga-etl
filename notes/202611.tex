@@ -251,4 +251,28 @@ The mole fraction and its relative standard uncertainty are
     x_\mathrm{Kr} &= \frac{n_\mathrm{Kr}}{n_\mathrm{Kr}+n_\mathrm{Xe}} \simeq (1.37\pm0.21)\times10^{-12}.
 \end{align}
 
+\begin{samepage}
+\subsection{Uncertainty Budget}
+
+For each independent input, let $s_i$ be its contribution to the relative standard uncertainty of $x_\mathrm{Kr}$ after propagation. Its share of the total variance is $s_i^2/\sum_j s_j^2$. The contributions for the calculation with $3\,\mathrm K$ temperature standard uncertainties are
+
+\begin{center}
+\begin{tabular}{lrr}
+Source & Relative term (\%) & Variance share (\%) \\
+\hline
+Calibrated volume fraction $R$ & 14.2 & 84.7 \\
+Xenon recycler volume $\beta_3$ & 4.0 & 6.6 \\
+Expansion volume $\beta_2$ & 3.4 & 4.8 \\
+Initial krypton pressure $P_{\mathrm{Kr},0}$ & 2.5 & 2.6 \\
+Xenon temperature & 1.3 & 0.76 \\
+Krypton temperature & 1.0 & 0.44 \\
+Xenon equation of state & 0.10 & 0.0042
+\end{tabular}
+\end{center}
+\end{samepage}
+
+The calibration of $R$ dominates because the same $R$ enters all three expansions and the estimate of $\beta_1$. The logarithmic sensitivity $3+1/(1-R)\simeq 4.0$ amplifies the relative uncertainty of $R$ by about a factor of four. Under the assumed equal and independent relative uncertainties, each of the two pressure readings used to calibrate $R$ accounts for about $42\%$ of the total variance.
+
+The recycler volume $\beta_3$ is the next largest contributor to the variance of $x_\mathrm{Kr}$ and accounts for about $90\%$ of the variance of $n_\mathrm{Xe}$. The two temperature contributions together account for about $1.2\%$ of the variance of $x_\mathrm{Kr}$.
+
 \end{document}
