@@ -130,4 +130,125 @@ $P_\mathrm{bkg}(A) \ne 0$, we estimate $c$ as
     c &= \frac{\sigma_\mathrm{bkg}(A)/\sigma_{0,\mathrm{bkg}} - 1}{P_\mathrm{bkg}(A)}.
 \end{align}
 
+\section{Uncertainty of Krypton Concentration}
+
+The volume fraction $R$ is calibrated by expanding the gas in $\beta_1$ into the combined volume $\beta_1+\beta_2$.
+
+\begin{keyidea}
+    We treat the calibration gas as ideal and assume isothermal expansion into an initially evacuated $\beta_2$. The two corrected pressure readings have independent relative standard uncertainties of $2.5\%$.
+\end{keyidea}
+
+The volume fraction is
+\begin{align}
+    R &= \frac{\beta_1}{\beta_1+\beta_2} = \frac{P(\beta_1+\beta_2)}{P(\beta_1)} = \frac{0.0016+0.012}{0.9965+0.012}\simeq 0.01349.
+\end{align}
+
+The relative standard uncertainty of $R$ is
+\begin{align}
+    \frac{\delta R}{R} &= \sqrt{ \left[\frac{\delta P(\beta_1)}{P(\beta_1)}\right]^2 + \left[\frac{\delta P(\beta_1+\beta_2)}{P(\beta_1+\beta_2)}\right]^2 } = \frac{\sqrt{2}}{40} \simeq 3.5\%.
+\end{align}
+
+The CAD volume $\beta_2$ is $620\pm21\,\mathrm{cm^3}$.
+
+\begin{keyidea}
+    We treat $21\,\mathrm{cm^3}$ as the standard uncertainty of $\beta_2$ and take $\beta_2$ and $R$ to be independent.
+\end{keyidea}
+
+First-order propagation gives
+\begin{align}
+    \beta_1 &= \beta_2\frac{R}{1-R}\simeq 8.48\,\mathrm{cm^3}, \\
+    \frac{\delta\beta_1}{\beta_1} &= \sqrt{ \left(\frac{\delta\beta_2}{\beta_2}\right)^2 + \left(\frac{\delta R}{R(1-R)}\right)^2 } \simeq 4.9\%.
+\end{align}
+
+\subsection{Xenon in the Recycler}
+
+The recycler volume is $\beta_3=1107\pm44\,\mathrm{cm^3}$. At $292\,\mathrm K$ and $14.8\,\mathrm{bar}$ absolute pressure, the \href{https://coolprop.org/fluid_properties/fluids/Xenon.html}{CoolProp 8.0.0 xenon equation of state} of \href{https://doi.org/10.1021/je050186n}{Lemmon and Span} gives
+\begin{align}
+    \rho_\mathrm{Xe} &\simeq 87.71\,\mathrm{kg/m^3} = 0.08771\,\mathrm{g/cm^3}.
+\end{align}
+The corresponding CoolProp query uses temperature in kelvin and pressure in pascals.
+\begin{verbatim}
+PropsSI("Dmass", "T", 292, "P", 1480000, "HEOS::Xenon")
+\end{verbatim}
+At $1\,\mathrm{atm}$, the same equation gives
+\begin{align*}
+    \rho_\mathrm{Xe}(0\,^\circ\mathrm C) &\simeq 5.90\,\mathrm{kg/m^3}, \\
+    \rho_\mathrm{Xe}(20\,^\circ\mathrm C) &\simeq 5.49\,\mathrm{kg/m^3}.
+\end{align*}
+
+Using the xenon molar mass $M_\mathrm{Xe}=131.293\,\mathrm{g/mol}$ from \href{https://ciaaw.org/xenon.htm}{CIAAW}, the mass and amount are
+\begin{align}
+    m_\mathrm{Xe} &= \rho_\mathrm{Xe}\beta_3\simeq 97.1\,\mathrm g, \\
+    n_\mathrm{Xe} &= \frac{\rho_\mathrm{Xe}\beta_3}{M_\mathrm{Xe}}\simeq 0.740\,\mathrm{mol}.
+\end{align}
+At the same pressure and $19\,^\circ\mathrm C=292.15\,\mathrm K$, the equation gives
+\begin{align*}
+    \rho_\mathrm{Xe} &\simeq 87.65\,\mathrm{kg/m^3}, \\
+    n_\mathrm{Xe} &\simeq 0.739\,\mathrm{mol}.
+\end{align*}
+The earlier entry of $87.65\,\mathrm{kg/m^3}$ is consistent with $19\,^\circ\mathrm C$ as the temperature input.
+
+\begin{keyidea}
+    We treat $44\,\mathrm{cm^3}$ as the standard uncertainty of $\beta_3$ and hold the recycler pressure and xenon molar mass fixed. The volume, density model, and temperature contributions are independent.
+\end{keyidea}
+
+\href{https://doi.org/10.1021/je050186n}{Lemmon and Span} estimate a relative expanded density uncertainty of $0.2\%$ with coverage factor $k=2$ for xenon up to $100\,\mathrm{MPa}$, giving a relative model standard uncertainty $\delta_\mathrm{EOS}\rho_\mathrm{Xe}/\rho_\mathrm{Xe}=0.1\%$.
+
+For a temperature standard uncertainty $\delta T$, the propagated contribution is
+\begin{align}
+    \delta_T\rho_\mathrm{Xe} &= \left|\left(\frac{\partial\rho_\mathrm{Xe}}{\partial T}\right)_P\right|\delta T, \\
+    \frac{\delta n_\mathrm{Xe}}{n_\mathrm{Xe}} &= \sqrt{\left(\frac{\delta\beta_3}{\beta_3}\right)^2 + \left(\frac{\delta_\mathrm{EOS}\rho_\mathrm{Xe}}{\rho_\mathrm{Xe}}\right)^2 + \left(\frac{\delta_T\rho_\mathrm{Xe}}{\rho_\mathrm{Xe}}\right)^2}.
+\end{align}
+At $292\,\mathrm K$ and $14.8\,\mathrm{bar}$ absolute pressure, the CoolProp derivative is about $-0.39\,\mathrm{kg\,m^{-3}\,K^{-1}}$. For $\delta T=3\,\mathrm K$, this gives $\delta_T\rho_\mathrm{Xe}\simeq 1.2\,\mathrm{kg/m^3}$.
+
+\begin{center}
+\begin{tabular}{lc}
+Temperature contribution & $\delta n_\mathrm{Xe}$ ($\mathrm{mol}$) \\
+\hline
+Omitted & 0.029 \\
+Propagated from $\delta T=3\,\mathrm K$ & 0.031
+\end{tabular}
+\end{center}
+
+\subsection{Krypton Concentration}
+
+The pressure transducer has voltage sensitivity $\epsilon=0.1\,\mathrm{V/Torr}$. The voltage difference $\Delta V=0.0888\,\mathrm V$ was measured before the first expansion, giving the initial krypton pressure
+\begin{align}
+    P_{\mathrm{Kr},0} &= \frac{\Delta V}{\epsilon} = 0.888\,\mathrm{Torr} \simeq 118.4\,\mathrm{Pa}.
+\end{align}
+
+\begin{keyidea}
+    We treat krypton as an ideal gas and assume that each of the three expansions retains the same fraction $R$ in $\beta_1$.
+\end{keyidea}
+
+At $T_\mathrm{Kr}=292\,\mathrm K$, the initial and final krypton amounts are given below, with $R_\mathrm g$ denoting the molar gas constant.
+\begin{align}
+    n_{\mathrm{Kr},0} &= \frac{P_{\mathrm{Kr},0}\beta_1}{R_\mathrm g T_\mathrm{Kr}} \simeq 4.13\times10^{-7}\,\mathrm{mol}, \\
+    n_\mathrm{Kr} &= R^3 n_{\mathrm{Kr},0} \simeq 1.01\times10^{-12}\,\mathrm{mol}.
+\end{align}
+
+Substituting the calibrated $\beta_1=\beta_2R/(1-R)$ gives $n_\mathrm{Kr}\propto R^4/(1-R)$. The same $R$ therefore contributes through both the dilution and the inferred $\beta_1$,
+\begin{align}
+    \frac{\partial\ln n_\mathrm{Kr}}{\partial\ln R} &= 4+\frac{R}{1-R}=3+\frac{1}{1-R}.
+\end{align}
+
+\begin{keyidea}
+    The initial krypton pressure has a relative standard uncertainty of $2.5\%$, and the krypton temperature has a standard uncertainty of $3\,\mathrm K$. We treat these two inputs as independent of each other and of the volume calibration.
+\end{keyidea}
+
+First-order propagation gives
+\begin{align}
+    \left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 &= \left(\frac{\delta P_{\mathrm{Kr},0}}{P_{\mathrm{Kr},0}}\right)^2 + \left(\frac{\delta T_\mathrm{Kr}}{T_\mathrm{Kr}}\right)^2 + \left(\frac{\delta\beta_2}{\beta_2}\right)^2 + \left[\left(3+\frac{1}{1-R}\right)\frac{\delta R}{R}\right]^2.
+\end{align}
+
+\begin{keyidea}
+    We treat the krypton and xenon amounts as independent, with independent temperature errors for the two gases. We use the xenon uncertainty evaluated at $\delta T=3\,\mathrm K$.
+\end{keyidea}
+
+The mole fraction and its relative standard uncertainty are
+\begin{align}
+    \frac{\delta x_\mathrm{Kr}}{x_\mathrm{Kr}} &= (1-x_\mathrm{Kr})\sqrt{\left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 + \left(\frac{\delta n_\mathrm{Xe}}{n_\mathrm{Xe}}\right)^2} \simeq 15\%, \\
+    x_\mathrm{Kr} &= \frac{n_\mathrm{Kr}}{n_\mathrm{Kr}+n_\mathrm{Xe}} \simeq (1.37\pm0.21)\times10^{-12}.
+\end{align}
+
 \end{document}
