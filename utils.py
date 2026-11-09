@@ -256,7 +256,7 @@ EOS_REL_ERR = 0.001  # Lemmon and Span, k=1
 
 
 def get_kr_concentration(
-    delta_v=0.0888,
+    delta_v=0.0842,
     n_expansion=3,
     temperature=292,
     recycler_pressure=14.8,
