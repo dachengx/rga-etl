@@ -186,3 +186,128 @@ def get_integral(x, y, xmin=5, xmax=250):
 
     integral = trapezoid(yy, xx)
     return integral
+
+
+def get_partial_pressure(
+    rga,
+    t0,
+    mass=84,
+    ref=87,
+    bkg_window=(-300, 0),
+    flw_window=(5, 250),
+):
+    """Sample partial pressure P_sample(A) and its standard uncertainty.
+
+    Follows Sec. 1 of notes/202611.tex without the low- or high-concentration
+    approximations: sigma_k(A) = sigma_0 [1 + c dp_k(A)] is summed over every
+    measurement group of both runs.
+
+    Args:
+        rga: dict from read_rga_file.
+        t0: start of the flow run [s], e.g. from get_t0.
+        mass: AMU of interest, A in the note.
+        ref: AMU of the empty reference channel.
+        bkg_window: background run (t_min, t_max) relative to t0 [s].
+        flw_window: flow run (t_min, t_max) relative to t0 [s].
+
+    Returns:
+        P_sample, P_sample_err: in Torr.
+
+    """
+    t = rga["t"] - t0
+    mask_bkg = (t > bkg_window[0]) & (t < bkg_window[1])
+    mask_flw = (t > flw_window[0]) & (t < flw_window[1])
+
+    # Reference-subtracted partial pressures dp_k(A) = p_k(A) - p_k(ref)
+    dp_bkg = rga[mass][mask_bkg] - rga[ref][mask_bkg]
+    dp_flw = rga[mass][mask_flw] - rga[ref][mask_flw]
+
+    P_bkg = dp_bkg.mean()
+    P_flw = dp_flw.mean()
+
+    # sigma_0 of each run from the reference channel, c from the background run
+    sigma_0_bkg = np.std(rga[ref][mask_bkg], ddof=1)
+    sigma_0_flw = np.std(rga[ref][mask_flw], ddof=1)
+    sigma_bkg = np.std(rga[mass][mask_bkg], ddof=1)
+    c = (sigma_bkg / sigma_0_bkg - 1) / P_bkg
+
+    # Variance of each run average, including the reference channel
+    def var_mean(dp, sigma_0):
+        N = len(dp)
+        return np.sum((sigma_0 * (1 + c * dp)) ** 2) / N**2 + sigma_0**2 / N
+
+    P_sample = P_flw - P_bkg
+    P_sample_err = np.sqrt(var_mean(dp_flw, sigma_0_flw) + var_mean(dp_bkg, sigma_0_bkg))
+
+    return P_sample, P_sample_err
+
+
+# Constants of the krypton calibration, see Sec. 2 of notes/202611.tex
+TORR = 133.322368  # Pa
+R_GAS = 8.314462618  # J/(mol K)
+M_XE = 131.293e-3  # kg/mol, CIAAW
+EPSILON = 0.1  # V/Torr, pressure transducer sensitivity
+P_BETA_1 = 0.9965 + 0.012  # pressure reading in beta_1
+P_BETA_12 = 0.0016 + 0.012  # pressure reading in beta_1 + beta_2
+P_REL_ERR = 0.025  # relative uncertainty of each corrected pressure reading
+BETA_2, BETA_2_ERR = 620e-6, 21e-6  # m^3, CAD
+BETA_3, BETA_3_ERR = 1107e-6, 44e-6  # m^3, recycler
+EOS_REL_ERR = 0.001  # Lemmon and Span, k=1
+
+
+def get_kr_concentration(
+    delta_v=0.0888,
+    n_expansion=3,
+    temperature=292,
+    recycler_pressure=14.8,
+    delta_temperature=3,
+):
+    """Krypton mole fraction in xenon and its standard uncertainty.
+
+    Follows Sec. 2 of notes/202611.tex, generalized to n_expansion expansions.
+
+    Args:
+        delta_v: transducer voltage difference before the first expansion [V].
+        n_expansion: number of expansions, each retaining the fraction R in beta_1.
+        temperature: temperature of both krypton and xenon [K].
+        recycler_pressure: absolute xenon pressure in the recycler [bar].
+        delta_temperature: standard uncertainty of each of the two temperatures [K].
+
+    Returns:
+        x_kr, x_kr_err: mole fraction and its standard uncertainty.
+
+    """
+    # Imported here so that the rest of utils works without CoolProp
+    from CoolProp.CoolProp import PropsSI
+
+    # Volume fraction R = beta_1 / (beta_1 + beta_2) and calibrated beta_1
+    R = P_BETA_12 / P_BETA_1
+    R_rel_err = np.sqrt(2) * P_REL_ERR
+    beta_1 = BETA_2 * R / (1 - R)
+
+    # Krypton amount after n_expansion expansions, n_Kr ∝ R^(n + 1) / (1 - R)
+    p_kr_0 = delta_v / EPSILON * TORR
+    n_kr = R**n_expansion * p_kr_0 * beta_1 / (R_GAS * temperature)
+    n_kr_rel_err = np.sqrt(
+        P_REL_ERR**2
+        + (delta_temperature / temperature) ** 2
+        + (BETA_2_ERR / BETA_2) ** 2
+        + ((n_expansion + 1 / (1 - R)) * R_rel_err) ** 2
+    )
+
+    # Xenon amount in the recycler from the Lemmon and Span equation of state
+    p = recycler_pressure * 1e5
+    rho_xe = PropsSI("Dmass", "T", temperature, "P", p, "HEOS::Xenon")
+    drho_dT = PropsSI("d(Dmass)/d(T)|P", "T", temperature, "P", p, "HEOS::Xenon")
+    n_xe = rho_xe * BETA_3 / M_XE
+    n_xe_rel_err = np.sqrt(
+        (BETA_3_ERR / BETA_3) ** 2
+        + EOS_REL_ERR**2
+        + (abs(drho_dT) * delta_temperature / rho_xe) ** 2
+    )
+
+    # Mole fraction, krypton and xenon amounts independent
+    x_kr = n_kr / (n_kr + n_xe)
+    x_kr_rel_err = (1 - x_kr) * np.sqrt(n_kr_rel_err**2 + n_xe_rel_err**2)
+
+    return x_kr, x_kr_rel_err * x_kr
