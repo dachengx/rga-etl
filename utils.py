@@ -249,7 +249,7 @@ M_XE = 131.293e-3  # kg/mol, CIAAW
 EPSILON = 0.1  # V/Torr, pressure transducer sensitivity
 P_BETA_1 = 0.9965 + 0.012  # pressure reading in beta_1
 P_BETA_12 = 0.0016 + 0.012  # pressure reading in beta_1 + beta_2
-P_REL_ERR = 0.025  # relative uncertainty of each corrected pressure reading
+P_REL_ERR = 0.0025  # relative uncertainty of each corrected pressure reading
 BETA_2, BETA_2_ERR = 620e-6, 21e-6  # m^3, CAD
 BETA_3, BETA_3_ERR = 1107e-6, 44e-6  # m^3, recycler
 EOS_REL_ERR = 0.001  # Lemmon and Span, k=1
