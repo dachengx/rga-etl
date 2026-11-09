@@ -97,42 +97,42 @@ def handle_analog_scan(req, data, publish, subscribe):
     )
     commands = [
         {
-            "rga/command": f"MI{initial_mass}\r",
+            "command": f"MI{initial_mass}\r",
             "nocommand": 0,
             "noresponse": 1,
             "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
-            "rga/command": f"MF{final_mass}\r",
+            "command": f"MF{final_mass}\r",
             "nocommand": 0,
             "noresponse": 1,
             "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
-            "rga/command": f"NF{scan_rate}\r",
+            "command": f"NF{scan_rate}\r",
             "nocommand": 0,
             "noresponse": 1,
             "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
-            "rga/command": f"SA{steps_per_amu}\r",
+            "command": f"SA{steps_per_amu}\r",
             "nocommand": 0,
             "noresponse": 1,
             "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
-            "rga/command": "AP?\r",
+            "command": "AP?\r",
             "nocommand": 0,
             "noresponse": 0,
             "length": DEFAULT_RESPONSE_LENGTH,
             "timeout": DEFAULT_TIMEOUT,
         },
         {
-            "rga/command": "SC1\r",
+            "command": "SC1\r",
             "nocommand": 0,
             "noresponse": 0,
             "length": sc_lengths,

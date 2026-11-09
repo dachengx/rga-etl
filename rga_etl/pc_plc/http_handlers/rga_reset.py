@@ -13,4 +13,4 @@ def handle_reset(req, data, publish, subscribe):
         return
 
     req._set_headers(200)
-    req.wfile.write(json.dumps({"status": "ok", "message": "PLC reset complete"}).encode())
+    req.wfile.write(json.dumps({"status": "ok", "message": "RGA reset complete"}).encode())

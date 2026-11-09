@@ -20,27 +20,32 @@ mkdir C:\mysql-data
 mkdir C:\grafana-data
 ```
 
-Check the usable address by `Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` or (`ipconfig` in `cmd`), and set `MQTT_BROKER` in `docker-compose.yml` as the "Ethernet"'s ip address.
+The containers reach the Mosquitto broker by its service name `mosquitto`, so no IP address is needed in `docker-compose.yml`. Only the PLC needs the PC's IP address: the PLC's `@MQTT_Broker` device points to `169.254.1.106:1883`, the address of the PC's Ethernet adapter connected to the PLC (`Ethernet 2`). Check it by `Get-NetIPAddress | Format-Table InterfaceAlias,IPAddress` (or `ipconfig` in `cmd`), and set it as a static IP so that it does not change after a reboot.
 
+The services are split into two groups. `mosquitto` and the monitor (`monitor_recorder`, `monitor_web`) always start. The RGA control services (`mysql`, `adminer`, `grafana`, `rga_control`) belong to the `rga` profile and start only when it is enabled.
+
+To start only the monitor, run
 ```
 docker compose -f "$HOME\rga-etl\docker-compose.yml" up -d
 ```
-or
+To also start the RGA control, run
 ```
-docker compose -f %USERPROFILE%\rga-etl\docker-compose.yml up -d
+docker compose -f "$HOME\rga-etl\docker-compose.yml" --profile rga up -d
 ```
-in `cmd`.
+In `cmd`, replace `"$HOME\rga-etl\docker-compose.yml"` by `%USERPROFILE%\rga-etl\docker-compose.yml`. To stop the RGA control as well, `docker compose down` also needs `--profile rga`.
 
 Test mosquito sub/pub model
 
 ```
-docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_sub -h mosquitto -p 1883 -t brx/plc/do -v
-docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_pub -h mosquitto -p 1883 -t brx/plc/do -m 1
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_sub -h mosquitto -p 1883 -t '#' -v
+docker run -it --rm --network rga-etl_default eclipse-mosquitto mosquitto_pub -h mosquitto -p 1883 -t rga/test -m 1
 ```
 
 To connect to grafana, visit `http://localhost:3000/`. To connect to adminer, visit `http://localhost:8090/` with `"server"` set to `mysql`.
 
-To check the log of `mqtt_bridge`, run `docker logs -f mqtt_bridge`. To restart `mqtt_bridge`, run `docker compose -f "$HOME\rga-etl\docker-compose.yml" build --no-cache mqtt_bridge`.
+To view the monitor, visit `http://localhost:8000/`, or double-click `start_monitor.bat`, which starts only the monitor services and opens the page. The `monitor_recorder` service subscribes to the `monitor/pv`, `monitor/sensor` and `monitor/bptp` topics published by the PLC and saves them as JSON files in `monitor`, which the `monitor_web` service serves.
+
+To check the log of `rga_control`, run `docker logs -f rga_control`. To rebuild `rga_control`, run `docker compose -f "$HOME\rga-etl\docker-compose.yml" --profile rga build --no-cache rga_control`.
 
 To setup ES-246 Ethernet to serial adapter, it can be used in two modes:
 
@@ -133,13 +138,13 @@ All settings are read from `.env` at runtime.
 
 Related codes are in `rga_etl\pc_plc`.
 
-In this mode the PC does not communicate with the RGA directly. Instead, the PC publishes MQTT messages to a Mosquitto broker; the PLC subscribes, forwards commands to the RGA over RS-232 via the ES-246 adapter, and publishes the response back. The `mqtt_bridge` service is the glue: it exposes an HTTP API that Grafana (via the `volkovlabs-form-panel` plugin) calls, translates each request into MQTT commands, waits for the PLC response, and writes results to MySQL.
+In this mode the PC does not communicate with the RGA directly. Instead, the PC publishes MQTT messages to a Mosquitto broker; the PLC subscribes, forwards commands to the RGA over RS-232 via the ES-246 adapter, and publishes the response back. The `rga_control` service is the glue: it exposes an HTTP API that Grafana (via the `volkovlabs-form-panel` plugin) calls, translates each request into MQTT commands, waits for the PLC response, and writes results to MySQL.
 
 ```
 Grafana (port 3000)
     │ HTTP POST (port 8080)
     ▼
-mqtt_bridge (Docker container)
+rga_control (Docker container)
     │ MQTT pub/sub (port 1883)
     ▼
 Mosquitto broker (Docker container)
@@ -151,9 +156,9 @@ PLC (BRX Do-more BX-DM1E-10ER3-D)
 RGA (SRS RGA200)
 ```
 
-### mqtt_bridge HTTP API
+### rga_control HTTP API
 
-The `mqtt_bridge` service is already declared in `docker-compose.yml` and starts with the rest of the stack. It listens on port `8080` and only accepts `POST` requests with a JSON body. All requests are processed sequentially — a `409` is returned if a scan is already running or a command is in flight.
+The `rga_control` service is declared in `docker-compose.yml` and starts with the `rga` profile. It listens on port `8080` and only accepts `POST` requests with a JSON body. All requests are processed sequentially — a `409` is returned if a scan is already running or a command is in flight.
 
 | Endpoint | Description | Required JSON fields |
 |---|---|---|
@@ -161,28 +166,32 @@ The `mqtt_bridge` service is already declared in `docker-compose.yml` and starts
 | `POST /rga_single_mass_scan` | Single-mass ion current measurement | `MR` (integer mass) |
 | `POST /rga_analog_scan` | Full analog scan over a mass range | `INITIAL_MASS`, `FINAL_MASS`, `SCAN_RATE` (0–7), `STEPS_PER_AMU` (10–25) |
 | `POST /rga_arbitrary_command` | Send any raw RGA command | `COMMAND` (string), `LENGTH` (int), `WITH_RESULT` (0 or 1), `TIMEOUT` (float) |
-| `POST /reset` | Reset the PLC | _(empty body `{}`)_ |
+| `POST /reset` | Reset the RGA communication in the PLC | _(empty body `{}`)_ |
 
 ### MQTT topic structure
 
-All topics are prefixed with `plc`. The bridge publishes RGA command parameters as individual topics (e.g. `plc/rga/command`) and then triggers execution by publishing `1` to the action topic. The PLC publishes its response to `plc/response`.
+All RGA topics are prefixed with `rga`. The `rga_control` service publishes the command parameters as individual topics (e.g. `rga/command`) and then triggers execution by publishing `1` to the action topic. The PLC publishes the RGA response to `rga/response`. The PLC status for the monitor is published separately under the `monitor` prefix.
 
 | Direction | Topic | Purpose |
 |---|---|---|
-| PC → PLC | `plc/rga/generic` | Trigger RGA command execution |
-| PC → PLC | `plc/reset` | Trigger PLC reset |
-| PC → PLC | `plc/rga/command` | RGA command string (e.g. `MR28\r`) |
-| PC → PLC | `plc/rga/length` | Expected response length in bytes |
-| PC → PLC | `plc/nocommand` | `1` = skip sending the command (read-only continuation) |
-| PLC → PC | `plc/response` | Raw response payload from the RGA |
+| PC → PLC | `rga/generic` | Trigger RGA command execution |
+| PC → PLC | `rga/reset` | Trigger reset of the RGA communication |
+| PC → PLC | `rga/command` | RGA command string (e.g. `MR28\r`) |
+| PC → PLC | `rga/length` | Expected response length in bytes |
+| PC → PLC | `rga/nocommand` | `1` = skip sending the command (read-only continuation) |
+| PC → PLC | `rga/noresponse` | `1` = the command has no response |
+| PLC → PC | `rga/response` | Raw response payload from the RGA |
+| PLC → PC | `monitor/pv` | Valve states (JSON) |
+| PLC → PC | `monitor/sensor` | Pressure and flow readings (JSON) |
+| PLC → PC | `monitor/bptp` | Booster and turbo pump readings (JSON) |
 
-### Environment variables for `mqtt_bridge`
+### Environment variables for `rga_control`
 
-These are set in `docker-compose.yml` under the `mqtt_bridge` service:
+These are set in `docker-compose.yml` under the `rga_control` service:
 
 | Variable | Default | Description |
 |---|---|---|
-| `MQTT_BROKER` | `169.254.11.119` | IP address of the Mosquitto broker (set to the host "Ethernet" IP) |
+| `MQTT_BROKER` | `mosquitto` | Hostname of the Mosquitto broker (the Docker service name) |
 | `MQTT_PORT` | `1883` | MQTT broker port |
 | `MYSQL_HOST` | `mysql` | MySQL container hostname |
 | `MYSQL_PORT` | `3306` | MySQL port |

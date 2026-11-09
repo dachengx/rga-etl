@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 from rga_etl.pc_plc.post_command import process as post_process
 
 
-class MQTTCommandRunner:
+class RGACommandRunner:
     def __init__(
         self,
         broker,

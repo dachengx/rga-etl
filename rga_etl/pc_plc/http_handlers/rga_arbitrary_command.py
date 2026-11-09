@@ -17,7 +17,7 @@ def handle_arbitrary_command(req, data, publish, subscribe):
         responses = req._run_commands(
             [
                 {
-                    "rga/command": command,
+                    "command": command,
                     "nocommand": 0,
                     "noresponse": noresponse,
                     "length": length,

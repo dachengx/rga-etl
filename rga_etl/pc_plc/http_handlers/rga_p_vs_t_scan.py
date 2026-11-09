@@ -92,7 +92,7 @@ class ScanState:
                     responses = run_commands(
                         [
                             {
-                                "rga/command": f"MR{mass}\r",
+                                "command": f"MR{mass}\r",
                                 "nocommand": 0,
                                 "noresponse": 0,
                                 "length": 4,

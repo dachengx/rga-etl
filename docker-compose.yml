@@ -1,7 +1,12 @@
+# Services without a profile (mosquitto and the monitor) always start.
+# The RGA control services start only with the 'rga' profile:
+#   docker compose up -d                  # monitor only
+#   docker compose --profile rga up -d    # monitor + RGA control
 services:
   mysql:
     image: mysql:8.4
     container_name: mysql
+    profiles: ['rga']
     environment:
       MYSQL_ROOT_PASSWORD: rga_user
       MYSQL_DATABASE: rga
@@ -15,12 +20,14 @@ services:
   adminer:
     image: adminer:5.4.2
     container_name: adminer
+    profiles: ['rga']
     ports:
       - '8090:8080'
 
   grafana:
     image: grafana/grafana-enterprise:12.4.4
     container_name: grafana
+    profiles: ['rga']
     ports:
       - '3000:3000'
     environment:
@@ -36,25 +43,53 @@ services:
   mosquitto:
     image: eclipse-mosquitto:2.0.22
     container_name: mosquitto
+    restart: unless-stopped
     ports:
       - '1883:1883'
     volumes:
       - './mosquitto.conf:/mosquitto/config/mosquitto.conf'
 
-  mqtt_bridge:
+  rga_control:
     build:
       context: .
-      dockerfile: mqtt_bridge/Dockerfile
-    container_name: mqtt_bridge
+      dockerfile: rga_control/Dockerfile
+    container_name: rga_control
+    profiles: ['rga']
     depends_on:
       - mosquitto
       - mysql
     ports:
       - '8080:8080'
     environment:
-      MQTT_BROKER: 169.254.11.119
+      MQTT_BROKER: mosquitto
       MQTT_PORT: 1883
       MYSQL_HOST: mysql
+
+  monitor_recorder:
+    build:
+      context: .
+      dockerfile: monitor_recorder/Dockerfile
+    container_name: monitor_recorder
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_BROKER: mosquitto
+      MQTT_PORT: 1883
+      MONITOR_DIR: /app/data
+    volumes:
+      - './monitor:/app/data'
+
+  monitor_web:
+    image: python:3.12-alpine
+    container_name: monitor_web
+    restart: unless-stopped
+    working_dir: /monitor
+    command: ['python', '-m', 'http.server', '8000', '--bind', '0.0.0.0']
+    ports:
+      - '8000:8000'
+    volumes:
+      - './monitor:/monitor:ro'
 
 volumes:
   mysql-data:

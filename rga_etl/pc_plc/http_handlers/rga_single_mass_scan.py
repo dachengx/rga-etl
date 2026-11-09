@@ -15,7 +15,7 @@ def handle_single_mass_scan(req, data, publish, subscribe):
         responses = req._run_commands(
             [
                 {
-                    "rga/command": f"MR{mass}\r",
+                    "command": f"MR{mass}\r",
                     "nocommand": 0,
                     "noresponse": 0,
                     "length": 4,

@@ -1,0 +1,12 @@
+# Only pyproject.toml, README.md and rga_etl/ are copied into the images
+.git
+.mypy_cache
+.ipynb_checkpoints
+**/__pycache__
+*.ipynb
+PLC
+notes
+monitor
+grafana
+xtract_monitor
+build

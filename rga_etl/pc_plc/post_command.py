@@ -76,7 +76,7 @@ def process(command, payload):
     no handler matches.
 
     """
-    main = command.get("rga/command", "")
+    main = command.get("command", "")
     for prefix, handler in _HANDLERS.items():
         if main.startswith(prefix):
             return handler(payload)

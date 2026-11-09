@@ -12,4 +12,4 @@ EXPOSE 8080
 
 STOPSIGNAL SIGINT
 
-CMD ["python", "-m", "rga_etl.pc_plc.mqtt_bridge"]
+CMD ["python", "-m", "rga_etl.pc_plc.rga_control"]

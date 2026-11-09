@@ -6,21 +6,21 @@ DEFAULT_TIMEOUT = 1.0
 
 INIT_COMMANDS = [
     {
-        "rga/command": "ID?\r",
+        "command": "ID?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "IN0\r",
+        "command": "IN0\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "FL1.0\r",
+        "command": "FL1.0\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
@@ -30,14 +30,14 @@ INIT_COMMANDS = [
 
 END_COMMANDS = [
     {
-        "rga/command": "MR0\r",
+        "command": "MR0\r",
         "nocommand": 0,
         "noresponse": 1,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "FL0.0\r",
+        "command": "FL0.0\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
@@ -49,49 +49,49 @@ END_COMMANDS = [
 # Results order: EE, IE, VF, FL, SP, ST, TP
 PARAM_COMMANDS = [
     {
-        "rga/command": "EE?\r",
+        "command": "EE?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "IE?\r",
+        "command": "IE?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "VF?\r",
+        "command": "VF?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "FL?\r",
+        "command": "FL?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "SP?\r",
+        "command": "SP?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "ST?\r",
+        "command": "ST?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": DEFAULT_RESPONSE_LENGTH,
         "timeout": DEFAULT_TIMEOUT,
     },
     {
-        "rga/command": "TP?\r",
+        "command": "TP?\r",
         "nocommand": 0,
         "noresponse": 0,
         "length": 4,

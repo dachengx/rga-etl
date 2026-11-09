@@ -7,20 +7,20 @@ import http.server
 import socketserver
 import logging
 
-from rga_etl.pc_plc.mqtt_runner import MQTTCommandRunner
+from rga_etl.pc_plc.rga_runner import RGACommandRunner
 from rga_etl.pc_plc.http_handlers.rga_p_vs_t_scan import handle_p_vs_t_scan, scan_state
 from rga_etl.pc_plc.http_handlers.rga_single_mass_scan import handle_single_mass_scan
 from rga_etl.pc_plc.http_handlers.rga_analog_scan import handle_analog_scan
 from rga_etl.pc_plc.http_handlers.rga_arbitrary_command import handle_arbitrary_command
-from rga_etl.pc_plc.http_handlers.plc_reset import handle_reset
+from rga_etl.pc_plc.http_handlers.rga_reset import handle_reset
 
 # -------------------------
 # Config
 # -------------------------
 HTTP_PORT = 8080
-MQTT_BROKER = os.getenv("MQTT_BROKER", "169.254.11.119")
+MQTT_BROKER = os.getenv("MQTT_BROKER", "mosquitto")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
-MQTT_TOPIC_PREFIX = "plc"
+MQTT_TOPIC_PREFIX = "rga"
 GRAFANA_ORIGIN = "http://localhost:3000"
 
 logging.basicConfig(
@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logging.getLogger("mysql.connector").setLevel(logging.WARNING)
 
-runner = MQTTCommandRunner(
+runner = RGACommandRunner(
     broker=MQTT_BROKER,
     port=MQTT_PORT,
     topic_prefix=MQTT_TOPIC_PREFIX,
@@ -46,22 +46,22 @@ class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     _ROUTES = {
         "/rga_p_vs_t_scan": {
             "handler": handle_p_vs_t_scan,
-            "publish": "rga/generic",
+            "publish": "generic",
             "subscribe": "response",
         },
         "/rga_single_mass_scan": {
             "handler": handle_single_mass_scan,
-            "publish": "rga/generic",
+            "publish": "generic",
             "subscribe": "response",
         },
         "/rga_analog_scan": {
             "handler": handle_analog_scan,
-            "publish": "rga/generic",
+            "publish": "generic",
             "subscribe": "response",
         },
         "/rga_arbitrary_command": {
             "handler": handle_arbitrary_command,
-            "publish": "rga/generic",
+            "publish": "generic",
             "subscribe": "response",
         },
         "/reset": {
