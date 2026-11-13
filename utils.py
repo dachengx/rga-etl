@@ -246,7 +246,7 @@ def get_partial_pressure(
 TORR = 133.322368  # Pa
 R_GAS = 8.314462618  # J/(mol K)
 M_XE = 131.293e-3  # kg/mol, CIAAW
-EPSILON = 0.1  # V/Torr, pressure transducer sensitivity
+EPSILON = 10  # V/Torr, pressure transducer sensitivity
 P_BETA_1 = 0.9965 + 0.012  # pressure reading in beta_1
 P_BETA_12 = 0.0016 + 0.012  # pressure reading in beta_1 + beta_2
 P_REL_ERR = 0.0025  # relative uncertainty of each corrected pressure reading
@@ -257,7 +257,7 @@ EOS_REL_ERR = 0.001  # Lemmon and Span, k=1
 
 def get_kr_concentration(
     delta_v=0.0842,
-    n_expansion=3,
+    n_expansion=2,
     temperature=292,
     recycler_pressure=14.8,
     delta_temperature=3,
@@ -265,6 +265,8 @@ def get_kr_concentration(
     """Krypton mole fraction in xenon and its standard uncertainty.
 
     Follows Sec. 2 of notes/202611.tex, generalized to n_expansion expansions.
+    After the last expansion, the gas near PT1 is pumped and the gas near PTq
+    is expanded into the infuser, contributing a further factor 1 / (1 + R).
 
     Args:
         delta_v: transducer voltage difference before the first expansion [V].
@@ -285,14 +287,14 @@ def get_kr_concentration(
     R_rel_err = np.sqrt(2) * P_REL_ERR
     beta_1 = BETA_2 * R / (1 - R)
 
-    # Krypton amount after n_expansion expansions, n_Kr ∝ R^(n + 1) / (1 - R)
+    # Krypton amount delivered to the infuser, n_Kr ∝ R^(n + 1) / (1 - R^2)
     p_kr_0 = delta_v / EPSILON * TORR
-    n_kr = R**n_expansion * p_kr_0 * beta_1 / (R_GAS * temperature)
+    n_kr = R**n_expansion / (1 + R) * p_kr_0 * beta_1 / (R_GAS * temperature)
     n_kr_rel_err = np.sqrt(
         P_REL_ERR**2
         + (delta_temperature / temperature) ** 2
         + (BETA_2_ERR / BETA_2) ** 2
-        + ((n_expansion + 1 / (1 - R)) * R_rel_err) ** 2
+        + ((n_expansion + 1 + 2 * R**2 / (1 - R**2)) * R_rel_err) ** 2
     )
 
     # Xenon amount in the recycler from the Lemmon and Span equation of state

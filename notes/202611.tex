@@ -212,24 +212,24 @@ Propagated from $\delta T=3\,\mathrm K$ & 0.031
 
 \subsection{Krypton Concentration}
 
-The pressure transducer has voltage sensitivity $\epsilon=0.1\,\mathrm{V/Torr}$. The voltage difference $\Delta V=0.0842\,\mathrm V$ was measured before the first expansion, giving the initial krypton pressure
+The pressure transducer has voltage sensitivity $\epsilon=10\,\mathrm{V/Torr}$. The voltage difference $\Delta V=0.0842\,\mathrm V$ was measured before the first expansion, giving the initial krypton pressure
 \begin{align}
-    P_{\mathrm{Kr},0} &= \frac{\Delta V}{\epsilon} = 0.842\,\mathrm{Torr} \simeq 112.3\,\mathrm{Pa}.
+    P_{\mathrm{Kr},0} &= \frac{\Delta V}{\epsilon} = 8.42\times10^{-3}\,\mathrm{Torr} \simeq 1.123\,\mathrm{Pa}.
 \end{align}
 
 \begin{keyidea}
-    We treat krypton as an ideal gas and assume that each of the three expansions retains the same fraction $R$ in $\beta_1$.
+    We treat krypton as an ideal gas and assume that each of the two expansions retains the same fraction $R$ in $\beta_1$. After the second expansion, the volume near PT1 is pumped and the volume near PTq is expanded into the infuser, delivering a further fraction $1/(1+R)$.
 \end{keyidea}
 
 At $T_\mathrm{Kr}=292\,\mathrm K$, the initial and final krypton amounts are given below, with $R_\mathrm g$ denoting the molar gas constant.
 \begin{align}
-    n_{\mathrm{Kr},0} &= \frac{P_{\mathrm{Kr},0}\beta_1}{R_\mathrm g T_\mathrm{Kr}} \simeq 3.92\times10^{-7}\,\mathrm{mol}, \\
-    n_\mathrm{Kr} &= R^3 n_{\mathrm{Kr},0} \simeq 9.61\times10^{-13}\,\mathrm{mol}.
+    n_{\mathrm{Kr},0} &= \frac{P_{\mathrm{Kr},0}\beta_1}{R_\mathrm g T_\mathrm{Kr}} \simeq 3.92\times10^{-9}\,\mathrm{mol}, \\
+    n_\mathrm{Kr} &= \frac{R^2}{1+R}\, n_{\mathrm{Kr},0} \simeq 7.03\times10^{-13}\,\mathrm{mol}.
 \end{align}
 
-Substituting the calibrated $\beta_1=\beta_2R/(1-R)$ gives $n_\mathrm{Kr}\propto R^4/(1-R)$. The same $R$ therefore contributes through both the dilution and the inferred $\beta_1$,
+Substituting the calibrated $\beta_1=\beta_2R/(1-R)$ gives $n_\mathrm{Kr}\propto R^3/(1-R^2)$. The same $R$ therefore contributes through the dilution, the final split, and the inferred $\beta_1$,
 \begin{align}
-    \frac{\partial\ln n_\mathrm{Kr}}{\partial\ln R} &= 4+\frac{R}{1-R}=3+\frac{1}{1-R}.
+    \frac{\partial\ln n_\mathrm{Kr}}{\partial\ln R} &= 3+\frac{R}{1-R}-\frac{R}{1+R}=3+\frac{2R^2}{1-R^2}.
 \end{align}
 
 \begin{keyidea}
@@ -238,7 +238,7 @@ Substituting the calibrated $\beta_1=\beta_2R/(1-R)$ gives $n_\mathrm{Kr}\propto
 
 First-order propagation gives
 \begin{align}
-    \left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 &= \left(\frac{\delta P_{\mathrm{Kr},0}}{P_{\mathrm{Kr},0}}\right)^2 + \left(\frac{\delta T_\mathrm{Kr}}{T_\mathrm{Kr}}\right)^2 + \left(\frac{\delta\beta_2}{\beta_2}\right)^2 + \left[\left(3+\frac{1}{1-R}\right)\frac{\delta R}{R}\right]^2.
+    \left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 &= \left(\frac{\delta P_{\mathrm{Kr},0}}{P_{\mathrm{Kr},0}}\right)^2 + \left(\frac{\delta T_\mathrm{Kr}}{T_\mathrm{Kr}}\right)^2 + \left(\frac{\delta\beta_2}{\beta_2}\right)^2 + \left[\left(3+\frac{2R^2}{1-R^2}\right)\frac{\delta R}{R}\right]^2.
 \end{align}
 
 \begin{keyidea}
@@ -247,8 +247,8 @@ First-order propagation gives
 
 The mole fraction and its relative standard uncertainty are
 \begin{align}
-    \frac{\delta x_\mathrm{Kr}}{x_\mathrm{Kr}} &= (1-x_\mathrm{Kr})\sqrt{\left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 + \left(\frac{\delta n_\mathrm{Xe}}{n_\mathrm{Xe}}\right)^2} \simeq 5.7\%, \\
-    x_\mathrm{Kr} &= \frac{n_\mathrm{Kr}}{n_\mathrm{Kr}+n_\mathrm{Xe}} \simeq (1.30\pm0.07)\times10^{-12}.
+    \frac{\delta x_\mathrm{Kr}}{x_\mathrm{Kr}} &= (1-x_\mathrm{Kr})\sqrt{\left(\frac{\delta n_\mathrm{Kr}}{n_\mathrm{Kr}}\right)^2 + \left(\frac{\delta n_\mathrm{Xe}}{n_\mathrm{Xe}}\right)^2} \simeq 5.6\%, \\
+    x_\mathrm{Kr} &= \frac{n_\mathrm{Kr}}{n_\mathrm{Kr}+n_\mathrm{Xe}} \simeq (9.51\pm0.53)\times10^{-13}.
 \end{align}
 
 \begin{samepage}
@@ -260,19 +260,19 @@ For each independent input, let $s_i$ be its contribution to the relative standa
 \begin{tabular}{lrr}
 Source & Relative term (\%) & Variance share (\%) \\
 \hline
-Xenon recycler volume $\beta_3$ & 3.97 & 49.02 \\
-Expansion volume $\beta_2$ & 3.39 & 35.60 \\
-Calibrated volume fraction $R$ & 1.42 & 6.25 \\
-Xenon temperature & 1.35 & 5.63 \\
-Krypton temperature & 1.03 & 3.28 \\
-Initial krypton pressure $P_{\mathrm{Kr},0}$ & 0.25 & 0.19 \\
+Xenon recycler volume $\beta_3$ & 3.97 & 50.41 \\
+Expansion volume $\beta_2$ & 3.39 & 36.61 \\
+Xenon temperature & 1.35 & 5.79 \\
+Calibrated volume fraction $R$ & 1.06 & 3.59 \\
+Krypton temperature & 1.03 & 3.37 \\
+Initial krypton pressure $P_{\mathrm{Kr},0}$ & 0.25 & 0.20 \\
 Xenon equation of state & 0.10 & 0.03
 \end{tabular}
 \end{center}
 \end{samepage}
 
-The recycler volume $\beta_3$ and expansion volume $\beta_2$ are the largest contributors to the variance of $x_\mathrm{Kr}$, accounting for about $49\%$ and $36\%$, respectively. The recycler volume also accounts for about $90\%$ of the variance of $n_\mathrm{Xe}$.
+The recycler volume $\beta_3$ and expansion volume $\beta_2$ are the largest contributors to the variance of $x_\mathrm{Kr}$, accounting for about $50\%$ and $37\%$, respectively. The recycler volume also accounts for about $90\%$ of the variance of $n_\mathrm{Xe}$.
 
-The logarithmic sensitivity $3+1/(1-R)\simeq 4.0$ amplifies the relative uncertainty of $R$ by about a factor of four because the same $R$ enters all three expansions and the estimate of $\beta_1$. The calibration of $R$ accounts for about $6.25\%$ of the variance of $x_\mathrm{Kr}$, with each of its two independent pressure readings contributing about $3.1\%$. The two temperature contributions together account for about $8.9\%$ of the variance of $x_\mathrm{Kr}$.
+The logarithmic sensitivity $3+2R^2/(1-R^2)\simeq 3.0$ amplifies the relative uncertainty of $R$ by about a factor of three because the same $R$ enters both expansions, the estimate of $\beta_1$, and the final split into the infuser. The $\beta_1$ and final-split dependences nearly cancel. The calibration of $R$ accounts for about $3.6\%$ of the variance of $x_\mathrm{Kr}$, with each of its two independent pressure readings contributing about $1.8\%$. The two temperature contributions together account for about $9.2\%$ of the variance of $x_\mathrm{Kr}$.
 
 \end{document}
