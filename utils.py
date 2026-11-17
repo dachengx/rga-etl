@@ -193,7 +193,7 @@ def get_integral(x, y, xmin=5, xmax=250):
     return integral
 
 
-def get_partial_pressure(
+def get_sample_integral(
     rga,
     t0,
     mass=84,
@@ -201,11 +201,16 @@ def get_partial_pressure(
     bkg_window=(-300, 0),
     flw_window=(5, 250),
 ):
-    """Sample partial pressure P_sample(A) and its standard uncertainty.
+    """Background-subtracted integral I_sample(A) of the flow run and its standard uncertainty.
 
-    Follows Sec. 1 of notes/202611.tex without the low- or high-concentration
-    approximations: sigma_k(A) = sigma_0 [1 + c dp_k(A)] is summed over every
-    measurement group of both runs.
+    I_sample(A) is the integral of dp(A) - P_bkg(A) over flw_window, where dp(A) = p(A) - p(ref)
+    and P_bkg(A) is the average of dp(A) over bkg_window. The integral uses the trapezoid rule of
+    get_integral, so I_sample(A) = sum_i w_i dp_i(A) - T P_bkg(A) with T = flw_window[1] -
+    flw_window[0] and trapezoid weights w_i (sum_i w_i = T).
+
+    The uncertainty follows Sec. 1 of notes/202611.tex without the low- or high-concentration
+    approximations, sigma_k(A) = sigma_0 [1 + c dp_k(A)], with the flow-run groups weighted by
+    w_i instead of 1 / N_flw and the background average scaled by T.
 
     Args:
         rga: dict from read_rga_file.
@@ -213,10 +218,10 @@ def get_partial_pressure(
         mass: AMU of interest, A in the note.
         ref: AMU of the empty reference channel.
         bkg_window: background run (t_min, t_max) relative to t0 [s].
-        flw_window: flow run (t_min, t_max) relative to t0 [s].
+        flw_window: flow run (t_min, t_max) relative to t0 [s], the integration range.
 
     Returns:
-        P_sample, P_sample_err: in Torr.
+        I_sample, I_sample_err: in Torr s.
 
     """
     t = rga["t"] - t0
@@ -224,11 +229,14 @@ def get_partial_pressure(
     mask_flw = (t > flw_window[0]) & (t < flw_window[1])
 
     # Reference-subtracted partial pressures dp_k(A) = p_k(A) - p_k(ref)
-    dp_bkg = rga[mass][mask_bkg] - rga[ref][mask_bkg]
-    dp_flw = rga[mass][mask_flw] - rga[ref][mask_flw]
-
+    dp = rga[mass] - rga[ref]
+    dp_bkg = dp[mask_bkg]
     P_bkg = dp_bkg.mean()
-    P_flw = dp_flw.mean()
+
+    # Trapezoid weights of get_integral, which is linear in y, so that integral = w @ y.
+    # The groups just outside flw_window get weight from the endpoint interpolation.
+    w = np.array([get_integral(t, e, *flw_window) for e in np.eye(len(t))])
+    T = flw_window[1] - flw_window[0]
 
     # sigma_0 of each run from the reference channel, c from the background run
     sigma_0_bkg = np.std(rga[ref][mask_bkg], ddof=1)
@@ -236,15 +244,17 @@ def get_partial_pressure(
     sigma_bkg = np.std(rga[mass][mask_bkg], ddof=1)
     c = (sigma_bkg / sigma_0_bkg - 1) / P_bkg
 
-    # Variance of each run average, including the reference channel
-    def var_mean(dp, sigma_0):
-        N = len(dp)
-        return np.sum((sigma_0 * (1 + c * dp)) ** 2) / N**2 + sigma_0**2 / N
+    # Flow run: sum_i w_i^2 [sigma_i(A)^2 + sigma_0^2]
+    var_flw = np.sum(w**2 * ((sigma_0_flw * (1 + c * dp)) ** 2 + sigma_0_flw**2))
 
-    P_sample = P_flw - P_bkg
-    P_sample_err = np.sqrt(var_mean(dp_flw, sigma_0_flw) + var_mean(dp_bkg, sigma_0_bkg))
+    # Background average, as in Sec. 1, scaled by T
+    N_bkg = len(dp_bkg)
+    var_P_bkg = np.sum((sigma_0_bkg * (1 + c * dp_bkg)) ** 2) / N_bkg**2 + sigma_0_bkg**2 / N_bkg
 
-    return P_sample, P_sample_err
+    I_sample = w @ dp - T * P_bkg
+    I_sample_err = np.sqrt(var_flw + T**2 * var_P_bkg)
+
+    return I_sample, I_sample_err
 
 
 # Constants of the krypton calibration, see Sec. 2 of notes/202611.tex
