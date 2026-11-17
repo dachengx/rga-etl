@@ -44,7 +44,7 @@ def get_t0(
     max_gap=2,
     baseline_points=8,
     onset_fraction=0.05,
-    t0_range=(8 * 60, 13 * 60),
+    t0_range=(7 * 60, 13 * 60),
     debug=False,
 ):
     x = np.asarray(x)
@@ -82,7 +82,11 @@ def get_t0(
     if not np.any(in_window):
         raise ValueError(f"No data in {t0_range} s.")
 
-    imax = np.flatnonzero(in_window)[np.argmax(z[in_window])]
+    # Peak after the lowest point of the window, so that the decaying tail of an
+    # earlier, higher step (e.g. the ice primer) cannot be taken as the peak
+    iw = np.flatnonzero(in_window)
+    iw = iw[np.argmin(z[iw]) :]
+    imax = iw[np.argmax(z[iw])]
 
     valid_slope = slope[h:imax]
 
@@ -131,12 +135,13 @@ def get_t0(
         in_range = (x[end] >= t0_range[0]) & (x[start] <= t0_range[1])
 
         if rise >= min_rise_dex and in_range:
-            good_runs.append((start, end))
+            good_runs.append((start, end, rise))
 
     if len(good_runs) == 0:
         raise ValueError(f"No significant sustained rise found in {t0_range} s.")
 
-    rise_start, rise_end = good_runs[-1]
+    # The flow onset is the largest sustained rise, not a later small bump
+    rise_start, rise_end, _ = max(good_runs, key=lambda run: run[2])
 
     b1 = max(0, rise_start - baseline_points)
     b2 = max(b1 + 1, rise_start - 1)
